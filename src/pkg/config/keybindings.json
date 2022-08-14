@@ -1,0 +1,67 @@
+[
+	{
+		"segment": 0,
+		"command": ["control", "alt", "4"],
+		"ability": "Geirskogul"
+	},
+	{
+		"segment": 0,
+		"command": ["control", "alt", "4"],
+		"ability": "Nastrond"
+	},
+	{
+		"segment": 1,
+		"command": ["control", "alt", "5"],
+		"ability": "Stardiver"
+	},
+	{
+		"segment": 2,
+		"command": ["control", "alt", "6"],
+		"ability": "True North"
+	},
+	{
+		"segment": 3,
+		"command": ["control", "alt", "7"],
+		"ability": "Elusive Jump"
+	},
+	{
+		"segment": 4,
+		"command": ["control", "alt", "8"],
+		"ability": "Arm's Length"
+	},
+	{
+		"segment": 5,
+		"command": ["control", "alt", "9"],
+		"ability": "Feint"
+	},
+	{
+		"segment": 6,
+		"command": ["control", "alt", "0"],
+		"ability": "Life Surge"
+	},
+	{
+		"segment": 7,
+		"command": ["control", "alt", "-"],
+		"ability": "Bloodbath"
+	},
+	{
+		"segment": 8,
+		"command": ["control", "alt", "="],
+		"ability": "Second Wind"
+	},
+	{
+		"segment": 9,
+		"command": ["control", "alt", "1"],
+		"ability": "Lance Charge"
+	},
+	{
+		"segment": 10,
+		"command": ["control", "alt", "2"],
+		"ability": "Battle Litany"
+	},
+	{
+		"segment": 11,
+		"command": ["control", "alt", "3"],
+		"ability": "Dragon Sight"
+	}
+]

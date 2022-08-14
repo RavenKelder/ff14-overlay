@@ -1,0 +1,71 @@
+{
+	"bufferLeniency": 1.5,
+	"abilities": [
+		{
+			"abilityName": "Arm's Length",
+			"cooldown": 120
+		},
+		{
+			"abilityName": "Battle Litany",
+			"cooldown": 120
+		},
+		{
+			"abilityName": "Bloodbath",
+			"cooldown": 90
+		},
+		{
+			"abilityName": "Dragonfire Dive",
+			"cooldown": 120
+		},
+		{
+			"abilityName": "Dragon Sight",
+			"cooldown": 120
+		},
+		{
+			"abilityName": "Elusive Jump",
+			"cooldown": 30
+		},
+		{
+			"abilityName": "Feint",
+			"cooldown": 90
+		},
+		{
+			"abilityName": "Geirskogul",
+			"cooldown": 30
+		},
+		{
+			"abilityName": "High Jump",
+			"cooldown": 30,
+			"charges": 2
+		},
+		{
+			"abilityName": "Lance Charge",
+			"cooldown": 60
+		},
+		{
+			"abilityName": "Life Surge",
+			"cooldown": 45
+		},
+		{
+			"abilityName": "Nastrond",
+			"cooldown": 10
+		},
+		{
+			"abilityName": "Second Wind",
+			"cooldown": 120
+		},
+		{
+			"abilityName": "Spineshatter Dive",
+			"cooldown": 60
+		},
+		{
+			"abilityName": "Stardiver",
+			"cooldown": 30
+		},
+		{
+			"abilityName": "True North",
+			"cooldown": 45,
+			"charges": 2
+		}
+	]
+}

@@ -1,0 +1,111 @@
+{
+	"name": "ff14-overlay",
+	"productName": "ff14-overlay",
+	"version": "1.0.0",
+	"description": "My Electron application description",
+	"main": ".webpack/main",
+	"scripts": {
+		"start": "electron-forge start",
+		"package": "electron-forge package",
+		"make": "electron-forge make",
+		"publish": "electron-forge publish",
+		"lint": "eslint --ext .ts,.tsx .",
+		"version": "electron -v",
+		"version:node": "node -v"
+	},
+	"keywords": [],
+	"author": {
+		"name": "Felix Sidharta Salim",
+		"email": "ravenkelder@gmail.com"
+	},
+	"license": "MIT",
+	"config": {
+		"forge": {
+			"packagerConfig": {},
+			"makers": [
+				{
+					"name": "@electron-forge/maker-squirrel",
+					"config": {
+						"name": "ff14_overlay"
+					}
+				},
+				{
+					"name": "@electron-forge/maker-zip",
+					"platforms": [
+						"darwin"
+					]
+				},
+				{
+					"name": "@electron-forge/maker-deb",
+					"config": {}
+				},
+				{
+					"name": "@electron-forge/maker-rpm",
+					"config": {}
+				}
+			],
+			"plugins": [
+				[
+					"@electron-forge/plugin-webpack",
+					{
+						"devContentSecurityPolicy": "default-src * self blob: data: gap:; style-src * self 'unsafe-inline' blob: data: gap:; script-src * 'self' 'unsafe-eval' 'unsafe-inline' blob: data: gap:; object-src * 'self' blob: data: gap:; img-src * self 'unsafe-inline' blob: data: gap:; connect-src self * 'unsafe-inline' blob: data: gap:; frame-src * self blob: data: gap:;",
+						"mainConfig": "./webpack.main.config.js",
+						"renderer": {
+							"config": "./webpack.renderer.config.js",
+							"entryPoints": [
+								{
+									"html": "./src/index.html",
+									"js": "./src/renderer.ts",
+									"name": "main_window",
+									"preload": {
+										"js": "./src/preload.ts"
+									}
+								}
+							]
+						}
+					}
+				]
+			]
+		}
+	},
+	"devDependencies": {
+		"@electron-forge/cli": "^6.0.0-beta.65",
+		"@electron-forge/maker-deb": "^6.0.0-beta.65",
+		"@electron-forge/maker-rpm": "^6.0.0-beta.65",
+		"@electron-forge/maker-squirrel": "^6.0.0-beta.65",
+		"@electron-forge/maker-zip": "^6.0.0-beta.65",
+		"@electron-forge/plugin-webpack": "^6.0.0-beta.65",
+		"@types/react": "^18.0.17",
+		"@types/react-dom": "^18.0.6",
+		"@types/uuid": "^8.3.4",
+		"@typescript-eslint/eslint-plugin": "^5.33.0",
+		"@typescript-eslint/parser": "^5.33.0",
+		"@vercel/webpack-asset-relocator-loader": "^1.7.3",
+		"css-loader": "^6.7.1",
+		"electron": "20.0.2",
+		"electron-rebuild": "^3.2.9",
+		"eslint": "^8.21.0",
+		"eslint-plugin-import": "^2.26.0",
+		"fork-ts-checker-webpack-plugin": "^7.2.13",
+		"node-loader": "^2.0.0",
+		"style-loader": "^3.3.1",
+		"ts-loader": "^9.3.1",
+		"typescript": "~4.5.4",
+		"url-loader": "^4.1.1"
+	},
+	"dependencies": {
+		"@nut-tree/nut-js": "^2.1.1",
+		"@types/node": "^18.7.2",
+		"@types/tail": "^2.2.1",
+		"electron-squirrel-startup": "^1.0.0",
+		"node-abi": "^3.24.0",
+		"node-global-key-listener": "^0.1.1",
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0",
+		"react-timer-hook": "^3.0.5",
+		"systeminformation": "^5.12.5",
+		"tail": "^2.2.4",
+		"tail-file": "^1.4.15",
+		"uuid": "^8.3.2"
+	}
+}
