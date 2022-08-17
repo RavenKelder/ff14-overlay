@@ -1,4 +1,4 @@
-import { getMenu } from ".";
+import { getMenuAndRun } from ".";
 import { Channel } from "../ipc";
 import { Parser } from "../parser";
 import {
@@ -8,6 +8,9 @@ import {
 	CustomOutOfCombatID,
 } from "../parser/events";
 import { pressKeys } from "../system/keyboard";
+import { play } from "../system/sound";
+
+const WARNING_ABILITIES = ["Battle Litany", "Lance Charge", "Nastrond"];
 
 export function setupCooldownEvents(
 	parser: Parser,
@@ -22,25 +25,35 @@ export function setupCooldownEvents(
 		) {
 			return;
 		}
+		if (WARNING_ABILITIES.includes(event.ability.name)) {
+			setTimeout(() => {
+				play("warn");
+			}, event.ability.cooldown * 1000);
+		}
 
-		getMenu().then((w) => {
+		getMenuAndRun(async (w) => {
 			w.webContents.send(
 				Channel.SegmentCooldown,
 				binding[event.ability.name],
-				event.ability.cooldown,
+				event.ability,
 			);
 		});
 	});
 }
 
 export async function setupCombatTrigger(parser: Parser) {
-	const window = await getMenu();
 	parser.hooks.attach(CustomOutOfCombatID, () => {
-		pressKeys(["shift", "]"]);
-		window.webContents.send(Channel.Combat, false);
+		getMenuAndRun(async (menu) => {
+			play("ooc");
+			pressKeys(["shift", "]"]);
+			menu.webContents.send(Channel.Combat, false);
+		});
 	});
 	parser.hooks.attach(CustomInCombatID, () => {
-		pressKeys(["shift", "["]);
-		window.webContents.send(Channel.Combat, true);
+		getMenuAndRun(async (menu) => {
+			play("itc");
+			pressKeys(["shift", "["]);
+			menu.webContents.send(Channel.Combat, true);
+		});
 	});
 }

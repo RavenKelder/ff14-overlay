@@ -2,29 +2,38 @@ import { Parser, ParserOptions } from "./pkg/parser";
 import { setupCooldownEvents, setupMenuStateHandler } from "./pkg/window";
 import abilityconfig from "./pkg/config/";
 import { getResolution, getScreenFactor } from "./pkg/system/display";
-import { Channel, setupFileResponse, setupStartOK } from "./pkg/ipc";
+import {
+	Channel,
+	setupAbilityCharges,
+	setupFileResponse,
+	setupStartOK,
+} from "./pkg/ipc";
 import { getExistingFiles } from "./pkg/file";
 import { forceMenuStateOpen } from "./pkg/window/keyevents";
 import { multiplyVec2 } from "./pkg/maths";
 import { setupCombatTrigger } from "./pkg/window/parserevents";
+import "./pkg/system/sound";
 
-const config: ParserOptions = {
+const parserOpts: ParserOptions = {
 	defaultPrimaryPlayer: "Raven Kelder",
+	abilities: Object.values(abilityconfig.abilities),
+	bindings: Object.values(abilityconfig.bindings),
 };
 
-if (config.defaultPrimaryPlayer !== "") {
-	console.log(`Using default primary player: ${config.defaultPrimaryPlayer}`);
+if (parserOpts.defaultPrimaryPlayer !== "") {
+	console.log(
+		`Using default primary player: ${parserOpts.defaultPrimaryPlayer}`,
+	);
 }
 
-const parser = new Parser(config);
+const parser = new Parser(parserOpts);
 
-parser.hooks.attachGlobal((e) => {
-	let out = e.string();
-	if (out.length > 100) {
-		out = out.slice(0, 100) + "...";
-	}
-	console.log(`[${e.ID}|${e.timestamp.toISOString()}] ${out}`);
-});
+function setupParseLog() {
+	parser.hooks.attachGlobal((e) => {
+		const out = e.string();
+		console.log(`[${e.ID}|${e.timestamp.toISOString()}] ${out}`);
+	});
+}
 
 let appReady = false;
 
@@ -42,6 +51,8 @@ export async function appWhenReady(): Promise<void> {
 interface StartOptions {
 	menuOpenKey: string;
 	menuEscapeRadius?: number;
+	menuDiameter?: number;
+	iconLength?: number;
 	segments?: number;
 	debug?: boolean;
 }
@@ -49,11 +60,16 @@ interface StartOptions {
 const defaultStartOptions: Required<StartOptions> = {
 	menuOpenKey: "VK_F10",
 	menuEscapeRadius: 200,
+	menuDiameter: 400,
+	iconLength: 50,
 	segments: 12,
 	debug: false,
 };
 
 async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
+	if (opts.debug) {
+		setupParseLog();
+	}
 	const commandBinding: Record<number, string[]> = {};
 	for (const b in abilityconfig.bindings) {
 		commandBinding[abilityconfig.bindings[b].segment] =
@@ -68,12 +84,14 @@ async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
 	const screenFactor = await getScreenFactor();
 
 	const startOptions = {
-		debug: opts.debug ?? false,
+		...defaultStartOptions,
+		...opts,
 		screenWidth: screenSize.x,
 		screenHeight: screenSize.y,
 	};
 
 	setupStartOK(startOptions, (event) => {
+		console.log("Menu window OK.");
 		forceMenuStateOpen(false);
 		parser.setInCombat(false);
 		getExistingFiles().then((icons) => {
@@ -86,6 +104,7 @@ async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
 
 	setupFileResponse();
 
+	setupAbilityCharges(parser);
 	setupCooldownEvents(parser, segmentBinding);
 	setupCombatTrigger(parser);
 

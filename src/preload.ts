@@ -23,7 +23,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
 		ipcRenderer.off(channel, callback);
 	},
 	ipcRendererSend: (channel: string, ...args: unknown[]) => {
-		ipcRenderer.send(channel, args);
+		ipcRenderer.send(channel, ...args);
 	},
 });
 

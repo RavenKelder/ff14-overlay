@@ -1,7 +1,7 @@
 import { mouse, Point } from "@nut-tree/nut-js";
 import { globalShortcut } from "electron";
 import { IGlobalKeyEvent } from "node-global-key-listener";
-import { getMenu } from ".";
+import { getMenuAndRun } from ".";
 import { addListener, pressKeys, removeListener } from "../system/keyboard";
 import { sendMouseTo } from "../system/mouse";
 import { Channel } from "../ipc";
@@ -15,19 +15,19 @@ export async function setupToggleInteractive(
 ): Promise<boolean> {
 	let mouseEventIgnored = !startInteractive;
 
-	const menu = await getMenu();
-
 	return globalShortcut.register(key, () => {
-		mouseEventIgnored = !mouseEventIgnored;
-		if (mouseEventIgnored) {
-			menu.setIgnoreMouseEvents(true);
-			menu.setAlwaysOnTop(true);
-			menu.setFocusable(false);
-		} else {
-			menu.setIgnoreMouseEvents(false);
-			menu.setAlwaysOnTop(false);
-			menu.setFocusable(true);
-		}
+		getMenuAndRun(async (menu) => {
+			mouseEventIgnored = !mouseEventIgnored;
+			if (mouseEventIgnored) {
+				menu.setIgnoreMouseEvents(true);
+				menu.setAlwaysOnTop(true);
+				menu.setFocusable(false);
+			} else {
+				menu.setIgnoreMouseEvents(false);
+				menu.setAlwaysOnTop(false);
+				menu.setFocusable(true);
+			}
+		});
 	});
 }
 
@@ -85,31 +85,37 @@ export async function setupMenuStateHandler(
 
 		if (menuState.open && event.state === "UP") {
 			menuState.open = false;
-			getMenu().then((w) => {
+			getMenuAndRun(async (w) => {
 				w.webContents.send(Channel.MenuClose);
 
-				getMenuSelection(centre, opts.escapeRadius, opts.segments).then(
-					(selected) => {
-						if (selected === null) {
-							return;
-						}
+				return getMenuSelection(
+					centre,
+					opts.escapeRadius,
+					opts.segments,
+				).then((selected) => {
+					if (selected === null) {
+						return;
+					}
 
-						pressKeys(opts.binding[selected]);
-						w.webContents.send(Channel.SegmentHover, -1);
-					},
-				);
+					pressKeys(opts.binding[selected]);
+					w.webContents.send(Channel.SegmentHover, -1);
+				});
 			});
 		} else if (!menuState.open && event.state === "DOWN") {
 			menuState.open = true;
 
-			getMenu().then((w) => {
+			getMenuAndRun(async (w) => {
 				w.webContents.send(Channel.MenuOpen);
 			});
 			sendMouseTo(centre);
 
-			getMenu().then((w) => {
-				getMenuSelection(centre, opts.escapeRadius, opts.segments).then(
-					(hovered) => {
+			getMenuAndRun(async (w) => {
+				return new Promise((res) => {
+					getMenuSelection(
+						centre,
+						opts.escapeRadius,
+						opts.segments,
+					).then((hovered) => {
 						if (hovered !== null) {
 							w.webContents.send(Channel.SegmentHover, hovered);
 						} else {
@@ -119,6 +125,7 @@ export async function setupMenuStateHandler(
 						const timer = setInterval(() => {
 							if (!menuState.open) {
 								clearInterval(timer);
+								res();
 								return;
 							}
 
@@ -140,8 +147,8 @@ export async function setupMenuStateHandler(
 								}
 							});
 						}, 50);
-					},
-				);
+					});
+				});
 			});
 		}
 	};

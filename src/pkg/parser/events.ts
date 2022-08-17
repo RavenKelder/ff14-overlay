@@ -83,6 +83,11 @@ export interface Ability {
 	cooldown: number;
 }
 
+export interface AbilityState extends Ability {
+	currentCharges: number;
+	lastOnCooldowns: Date[];
+}
+
 export enum Directional {
 	Front = "FRONT",
 	FlankLeft = "FLANK_LEFT",
@@ -170,8 +175,8 @@ export class CustomInCombat extends ParseEvent {
 
 export class CustomOffCooldown extends ParseEvent {
 	cooldownStartTime: Date;
-	ability: Ability;
-	constructor(start: Date, ability: Ability) {
+	ability: AbilityState;
+	constructor(start: Date, ability: AbilityState) {
 		super("");
 		this.ID = CustomOffCooldownID;
 		this.cooldownStartTime = start;
@@ -180,8 +185,8 @@ export class CustomOffCooldown extends ParseEvent {
 }
 
 export class CustomOnCooldown extends ParseEvent {
-	ability: Ability;
-	constructor(ability: Ability) {
+	ability: AbilityState;
+	constructor(ability: AbilityState) {
 		super("");
 		this.ID = CustomOnCooldownID;
 		this.ability = ability;

@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { Tail } from "tail";
 
-import config from "../config";
+import config, { Ability, Binding } from "../config";
 import {
 	DELIMITER,
 	ParseEvent,
@@ -18,19 +18,24 @@ import {
 	CustomOffCooldown,
 	CustomOnCooldownID,
 	CustomOnCooldown,
+	AbilityState,
 } from "./events";
 import { Hook, HookManager } from "../hooks";
 import { appWhenReady } from "../../driver";
+import { AbilityManager } from "./ability";
 
 interface State {
 	primaryPlayer: string;
 	primaryPlayerID: string;
 	inCombat: boolean;
 	lastInCombat: Date;
+	abilityManager: AbilityManager;
 }
 
 export interface ParserOptions {
 	defaultPrimaryPlayer?: string;
+	abilities: Ability[];
+	bindings: Binding[];
 }
 
 export class Parser {
@@ -54,8 +59,11 @@ export class Parser {
 			primaryPlayerID: "",
 			inCombat: false,
 			lastInCombat: new Date(),
+			abilityManager: new AbilityManager(
+				opts.abilities ?? [],
+				opts.bindings ?? [],
+			),
 		};
-
 		this.setupCustomEvents();
 	}
 
@@ -163,6 +171,14 @@ export class Parser {
 		return new ParseEvent(line);
 	}
 
+	getAbilityBySegment(segment: number): AbilityState | null {
+		const ability = this.state.abilityManager.getAbilityBySegment(segment);
+		if (ability === null) {
+			return null;
+		}
+		return ability;
+	}
+
 	setInCombat(inCombat: boolean) {
 		this.state.inCombat = inCombat;
 	}
@@ -222,27 +238,46 @@ export class Parser {
 			}
 
 			if (
-				(this.state.primaryPlayerID !== "" &&
+				((this.state.primaryPlayerID !== "" &&
 					e.source.ID === this.state.primaryPlayerID) ||
-				(this.state.primaryPlayerID === "" &&
-					e.source.name === this.state.primaryPlayer &&
-					config.abilities[e.ability] &&
-					config.abilities[e.ability].cooldown > 1)
+					(this.state.primaryPlayerID === "" &&
+						e.source.name === this.state.primaryPlayer)) &&
+				config.abilities[e.ability] &&
+				config.abilities[e.ability].cooldown > 0
 			) {
+				let ability = this.state.abilityManager.getAbilityByName(
+					e.ability,
+				);
+				if (ability === null) {
+					return;
+				}
+
+				ability = this.state.abilityManager.putAbilityOnCooldownByName(
+					e.ability,
+				);
+				if (ability === null) {
+					return;
+				}
+
 				this.hooks.run(
 					CustomOnCooldownID,
-					new CustomOnCooldown(config.abilities[e.ability]),
+					new CustomOnCooldown(ability),
 				);
 
 				setTimeout(() => {
+					const ability =
+						this.state.abilityManager.putAbilityOffCooldownByName(
+							e.ability,
+						);
+					if (ability === null) {
+						return;
+					}
+
 					this.hooks.run(
 						CustomOffCooldownID,
-						new CustomOffCooldown(
-							e.timestamp,
-							config.abilities[e.ability],
-						),
+						new CustomOffCooldown(e.timestamp, ability),
 					);
-				}, 1000 * (config.abilities[e.ability].cooldown - config.bufferLeniency));
+				}, 1000 * ability.cooldown);
 			}
 		};
 

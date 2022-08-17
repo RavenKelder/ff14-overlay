@@ -97,15 +97,19 @@
 		"@nut-tree/nut-js": "^2.1.1",
 		"@types/node": "^18.7.2",
 		"@types/tail": "^2.2.1",
+		"@types/wav": "^1.0.1",
+		"async-mutex": "^0.3.2",
 		"electron-squirrel-startup": "^1.0.0",
 		"node-abi": "^3.24.0",
 		"node-global-key-listener": "^0.1.1",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
 		"react-timer-hook": "^3.0.5",
+		"speaker": "^0.5.4",
 		"systeminformation": "^5.12.5",
 		"tail": "^2.2.4",
 		"tail-file": "^1.4.15",
-		"uuid": "^8.3.2"
+		"uuid": "^8.3.2",
+		"wav": "^1.0.2"
 	}
 }

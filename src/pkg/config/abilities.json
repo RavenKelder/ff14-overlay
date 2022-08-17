@@ -34,6 +34,10 @@
 			"cooldown": 30
 		},
 		{
+			"abilityName": "Nastrond",
+			"cooldown": 10
+		},
+		{
 			"abilityName": "High Jump",
 			"cooldown": 30,
 			"charges": 2
@@ -44,7 +48,8 @@
 		},
 		{
 			"abilityName": "Life Surge",
-			"cooldown": 45
+			"cooldown": 45,
+			"charges": 2
 		},
 		{
 			"abilityName": "Nastrond",

@@ -13,15 +13,15 @@ if (container) {
 
 interface AppProps {
 	offset?: boolean;
-	size?: number;
-	boxSize?: number;
-	segments?: number;
 }
 
 interface Options {
 	debug: boolean;
 	screenWidth: number;
 	screenHeight: number;
+	menuDiameter: number;
+	iconLength: number;
+	segments: number;
 }
 
 function App(opts: AppProps): JSX.Element {
@@ -30,15 +30,11 @@ function App(opts: AppProps): JSX.Element {
 	const [screenResolution, setScreenResolution] = React.useState<
 		[number, number]
 	>([0, 0]);
-	const [containerLength, setContainerLength] = React.useState(
-		opts.size ?? 400,
-	);
-	const [boxSideLength, setBoxSideLength] = React.useState(
-		opts.boxSize ?? 50,
-	);
+	const [containerLength, setContainerLength] = React.useState(0);
+	const [boxSideLength, setBoxSideLength] = React.useState(0);
 
 	const [segments, setSegments] = React.useState(
-		[...Array(opts.segments ?? 12).keys()].map((item) => {
+		[...Array(0).keys()].map((item) => {
 			return {
 				segment: item,
 				imageSource: "",
@@ -121,11 +117,39 @@ function App(opts: AppProps): JSX.Element {
 					Object.prototype.hasOwnProperty.call(
 						options,
 						"screenHeight",
-					)
+					) &&
+					Object.prototype.hasOwnProperty.call(
+						options,
+						"menuDiameter",
+					) &&
+					Object.prototype.hasOwnProperty.call(
+						options,
+						"iconLength",
+					) &&
+					Object.prototype.hasOwnProperty.call(options, "segments")
 				) {
 					const opts = options as Options;
 					setDebug(opts.debug);
 					setScreenResolution([opts.screenWidth, opts.screenHeight]);
+					setContainerLength(opts.menuDiameter);
+					setBoxSideLength(opts.iconLength);
+					setSegments((prev) => {
+						return [...Array(opts.segments).keys()].map(
+							(item, index) => {
+								let imageSource = "";
+								let cooldown = new Date();
+								if (index < prev.length) {
+									imageSource = prev[index].imageSource;
+									cooldown = prev[index].cooldown;
+								}
+								return {
+									segment: item,
+									imageSource: imageSource,
+									cooldown: cooldown,
+								};
+							},
+						);
+					});
 				} else {
 					console.error(
 						`Options does not have expected values: ${JSON.stringify(
@@ -231,8 +255,9 @@ function App(opts: AppProps): JSX.Element {
 						}}
 					>
 						<Box
+							debug={debug}
 							hovered={segment.segment === hoveredSegment}
-							visible={visible || editMode || debug}
+							visible={visible || editMode}
 							inCombat={inCombat}
 							key={segment.segment}
 							sideLength={boxSideLength}
