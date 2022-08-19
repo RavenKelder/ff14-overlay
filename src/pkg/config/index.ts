@@ -1,6 +1,7 @@
 import abilityconfig from "./abilities.json";
 import keybindingsconfig from "./keybindings.json";
 
+const FF14_WINDOW_NAME = "FINAL FANTASY XIV";
 const DEFAULT_ACT_LOG_DIR =
 	"AppData\\Roaming\\Advanced Combat Tracker\\FFXIVLogs";
 const ASSETS_DIR = "assets";
@@ -54,6 +55,7 @@ const uiBindings = {
 };
 
 export default {
+	FF14_WINDOW_NAME,
 	DEFAULT_ACT_LOG_DIR,
 	ASSETS_DIR,
 	abilities,

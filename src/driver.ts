@@ -13,6 +13,7 @@ import { forceMenuStateOpen } from "./pkg/window/keyevents";
 import { multiplyVec2 } from "./pkg/maths";
 import { setupCombatTrigger } from "./pkg/window/parserevents";
 import "./pkg/system/sound";
+import { setupPollActiveWindow } from "./pkg/system/focus";
 
 const parserOpts: ParserOptions = {
 	defaultPrimaryPlayer: "Raven Kelder",
@@ -107,6 +108,8 @@ async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
 	setupAbilityCharges(parser);
 	setupCooldownEvents(parser, segmentBinding);
 	setupCombatTrigger(parser);
+
+	setupPollActiveWindow();
 
 	await Promise.all([
 		setupMenuStateHandler({
