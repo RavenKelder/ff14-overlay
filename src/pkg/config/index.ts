@@ -29,7 +29,7 @@ abilityconfig.abilities.forEach((a) => {
 });
 
 const bindings: Record<string, Binding> = {};
-keybindingsconfig.forEach((b) => {
+keybindingsconfig.segments.forEach((b) => {
 	bindings[b.ability] = {
 		ability: b.ability,
 		command: b.command,
@@ -37,10 +37,27 @@ keybindingsconfig.forEach((b) => {
 	};
 });
 
+const functionKeyRegex = /F[0-9]{1,2}/g;
+
+let openMenu = keybindingsconfig.openMenu;
+if (openMenu.match(functionKeyRegex)) {
+	openMenu = `VK_${openMenu}`;
+}
+
+const uiBindings = {
+	openMenu: openMenu,
+	toggleInteractiveUI: keybindingsconfig.toggleInteractiveUI,
+	restartUI: keybindingsconfig.restartUI,
+	closeUI: keybindingsconfig.closeUI,
+	openGameUI: keybindingsconfig.openGameUI,
+	closeGameUI: keybindingsconfig.closeGameUI,
+};
+
 export default {
 	DEFAULT_ACT_LOG_DIR,
 	ASSETS_DIR,
 	abilities,
 	bindings,
 	bufferLeniency,
+	uiBindings,
 };

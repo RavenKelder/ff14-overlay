@@ -1,9 +1,16 @@
-import React from "react";
+import React, { ReactNode, CSSProperties } from "react";
 
+// Centred is a wrapper component that makes its children centred, by using
+// flex boxes and empty divs to pad its child into the centre.
 export default function Centred(props: {
-	children: React.ReactNode;
-	style?: React.CSSProperties;
+	children: ReactNode;
+	className?: string;
+	style?: CSSProperties;
 }): JSX.Element {
+	/**
+	 * CSS styles.
+	 */
+
 	const parentOuterStyle: React.CSSProperties = {
 		...props.style,
 		display: "flex",
@@ -17,8 +24,12 @@ export default function Centred(props: {
 	const childStyle: React.CSSProperties = {
 		flex: "1 1 auto",
 	};
+
 	return (
-		<div className="centred" style={parentOuterStyle}>
+		<div
+			className={`centered ${props.className ?? ""}`}
+			style={parentOuterStyle}
+		>
 			<div style={childStyle} />
 			<div style={{ ...parentInnerStyle, flex: "0 0 auto" }}>
 				<div style={childStyle} />

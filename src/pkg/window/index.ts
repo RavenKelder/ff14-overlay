@@ -45,16 +45,15 @@ export async function createMenu(opts: CreateMenuOptions = {}): Promise<void> {
 	await restartMenu(opts);
 }
 
-export async function getMenuAndRun(
-	command: (menu: BrowserWindow) => Promise<void>,
-): Promise<void> {
+export async function getMenuAndRun<T>(
+	command: (menu: BrowserWindow) => Promise<T>,
+): Promise<T> {
 	await mutex.waitForUnlock();
 	if (currentMenu !== null) {
 		runningCommands += 1;
-		command(currentMenu).finally(() => {
+		return command(currentMenu).finally(() => {
 			runningCommands -= 1;
 		});
-		return;
 	}
 
 	const start = new Date();
@@ -68,10 +67,13 @@ export async function getMenuAndRun(
 			if (currentMenu !== null) {
 				clearInterval(timer);
 				runningCommands += 1;
-				command(currentMenu).finally(() => {
-					res();
-					runningCommands -= 1;
-				});
+				command(currentMenu)
+					.then((v) => {
+						res(v);
+					})
+					.finally(() => {
+						runningCommands -= 1;
+					});
 			}
 		}, 300);
 	});

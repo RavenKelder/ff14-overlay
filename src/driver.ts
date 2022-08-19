@@ -59,7 +59,7 @@ interface StartOptions {
 
 const defaultStartOptions: Required<StartOptions> = {
 	menuOpenKey: "VK_F10",
-	menuEscapeRadius: 200,
+	menuEscapeRadius: 150,
 	menuDiameter: 400,
 	iconLength: 50,
 	segments: 12,

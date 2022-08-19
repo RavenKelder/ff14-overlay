@@ -1,4 +1,5 @@
 import { getMenuAndRun } from ".";
+import config from "../config";
 import { Channel } from "../ipc";
 import { Parser } from "../parser";
 import {
@@ -42,18 +43,30 @@ export function setupCooldownEvents(
 }
 
 export async function setupCombatTrigger(parser: Parser) {
+	// If open/close UI aren't bound, don't trigger the key events.
+	let triggerKeyEvents = true;
+	if (
+		config.uiBindings.openGameUI.length === 0 ||
+		config.uiBindings.closeGameUI.length === 0
+	) {
+		triggerKeyEvents = false;
+	}
 	parser.hooks.attach(CustomOutOfCombatID, () => {
 		getMenuAndRun(async (menu) => {
 			play("ooc");
-			pressKeys(["shift", "]"]);
 			menu.webContents.send(Channel.Combat, false);
+			if (triggerKeyEvents) {
+				pressKeys(config.uiBindings.closeGameUI);
+			}
 		});
 	});
 	parser.hooks.attach(CustomInCombatID, () => {
 		getMenuAndRun(async (menu) => {
 			play("itc");
-			pressKeys(["shift", "["]);
 			menu.webContents.send(Channel.Combat, true);
+			if (triggerKeyEvents) {
+				pressKeys(config.uiBindings.openGameUI);
+			}
 		});
 	});
 }

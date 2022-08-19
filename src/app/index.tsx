@@ -1,7 +1,7 @@
-import * as React from "react";
+import React, { CSSProperties, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Channel } from "./ipc";
-import Box from "./components/box";
+import Segment from "./components/segment";
 
 const container = document.getElementById("app");
 if (container) {
@@ -25,15 +25,23 @@ interface Options {
 }
 
 function App(opts: AppProps): JSX.Element {
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const [_, setStartTimer] = React.useState<NodeJS.Timer | null>(null);
-	const [screenResolution, setScreenResolution] = React.useState<
-		[number, number]
-	>([0, 0]);
-	const [containerLength, setContainerLength] = React.useState(0);
-	const [boxSideLength, setBoxSideLength] = React.useState(0);
+	/**
+	 * State hooks.
+	 */
 
-	const [segments, setSegments] = React.useState(
+	// This is used to store a setInterval timer, which begins when this first
+	// renders. It polls the main process with StartOK until it receives a
+	// StartOptions response. This is used to clear the setInterval after that
+	// occurs.
+	const [, setStartTimer] = useState<NodeJS.Timer | null>(null);
+
+	// States for how this menu generally appears.
+	const [screenResolution, setScreenResolution] = useState<[number, number]>([
+		0, 0,
+	]);
+	const [containerLength, setContainerLength] = useState(0);
+	const [boxSideLength, setBoxSideLength] = useState(0);
+	const [segments, setSegments] = useState(
 		[...Array(0).keys()].map((item) => {
 			return {
 				segment: item,
@@ -42,55 +50,33 @@ function App(opts: AppProps): JSX.Element {
 			};
 		}),
 	);
-	const [hoveredSegment, setHoveredSegment] = React.useState(-1);
 
-	const [inCombat, setInCombat] = React.useState(false);
+	// Which menu segment is currently hovered. A negative value indicates none.
+	const [hoveredSegment, setHoveredSegment] = useState(-1);
 
-	const [editMode, setEditMode] = React.useState(false);
-	const [visible, setVisible] = React.useState(false);
-	const [debug, setDebug] = React.useState(false);
+	// Whether player is in combat. This affects how the menu is displayed.
+	const [inCombat, setInCombat] = useState(false);
 
-	const boxStyle: React.CSSProperties = {
-		position: "absolute",
-	};
+	// Whether user is in edit mode. In this mode, they can modify the segments.
+	const [editMode, setEditMode] = useState(false);
 
-	const divStyle: React.CSSProperties = {
-		height: containerLength,
-		width: containerLength,
-		margin: "auto",
-	};
+	// Whether this menu is in debug mode. This mode makes it easier to interact
+	// with the menu.
+	const [debug, setDebug] = useState(false);
 
-	const internalRadius = Math.round((containerLength * 0.9) / 2);
-	const angle = (2 * Math.PI) / segments.length;
+	/**
+	 * useEffects.
+	 */
 
-	const segmentPositions = segments.map((val, index) => {
-		let segmentAngle: number = angle * index;
-		if (!opts.offset) {
-			segmentAngle = segmentAngle + angle / 2;
-		}
-		return {
-			...val,
-			angle: segmentAngle,
-			positionX: Math.round(
-				screenResolution[0] / 2 -
-					boxSideLength / 2 +
-					Math.cos(segmentAngle) * internalRadius,
-			),
-			positionY: Math.round(
-				screenResolution[1] / 2 -
-					boxSideLength / 2 +
-					Math.sin(segmentAngle) * internalRadius,
-			),
-		};
-	});
-
-	React.useEffect(() => {
+	useEffect(() => {
+		// Force the container to be bound by this component's size.
 		if (container) {
 			container.style.width = `${containerLength}px`;
 			container.style.height = `${containerLength}px`;
-			container.style.padding = `0`;
-			container.style.margin = `0`;
 		}
+
+		// On getting the start options, clear the timer so this will stop polling
+		// the main process, and set the states that determine how the menu looks.
 		window.electronAPI.ipcRendererOn(
 			Channel.StartOptions,
 			(event, options) => {
@@ -159,6 +145,9 @@ function App(opts: AppProps): JSX.Element {
 				}
 			},
 		);
+
+		// When icon images are received, populate the appropriate segment with
+		// that data.
 		window.electronAPI.ipcRendererOn(
 			Channel.FileReceive,
 			(event, base64, index) => {
@@ -185,6 +174,7 @@ function App(opts: AppProps): JSX.Element {
 			},
 		);
 
+		// Hook for when player is in combat.
 		window.electronAPI.ipcRendererOn(Channel.Combat, (_, inCombat) => {
 			if (typeof inCombat !== "boolean") {
 				console.error(`Unexpected typeof inCombat ${typeof inCombat}`);
@@ -194,25 +184,16 @@ function App(opts: AppProps): JSX.Element {
 			setInCombat(inCombat);
 		});
 
-		window.electronAPI.ipcRendererOn(Channel.MenuOpen, () => {
-			setVisible(true);
+		// Hook when segments are being hovered.
+		window.electronAPI.ipcRendererOn(Channel.SegmentHover, (_, index) => {
+			if (typeof index !== "number") {
+				console.error(`Unexpected typeof index ${typeof index}`);
+				return;
+			}
+			setHoveredSegment(index);
 		});
 
-		window.electronAPI.ipcRendererOn(Channel.MenuClose, () => {
-			setVisible(false);
-		});
-
-		window.electronAPI.ipcRendererOn(
-			Channel.SegmentHover,
-			(event, index) => {
-				if (typeof index !== "number") {
-					console.error(`Unexpected typeof index ${typeof index}`);
-					return;
-				}
-				setHoveredSegment(index);
-			},
-		);
-
+		// Once all hooks are set up, poll the main process with StartOK.
 		setStartTimer(
 			setInterval(() => {
 				window.electronAPI.ipcRendererSend(Channel.StartOK);
@@ -220,24 +201,72 @@ function App(opts: AppProps): JSX.Element {
 		);
 	}, []);
 
+	/**
+	 * Event functions.
+	 */
+
 	const selectFile = (index: number) => {
 		window.electronAPI.ipcRendererSend(Channel.FileRequest, index);
 	};
 
+	// This is practically unused as there's no real interaction with the menu
+	// window.
 	const selectSegment = (index: number) => {
-		setTimeout(() => {
-			window.electronAPI.ipcRendererSend(Channel.SegmentSelect, index);
-		}, 3000);
+		window.electronAPI.ipcRendererSend(Channel.SegmentSelect, index);
 	};
 
 	const toggleEditMode = () => {
 		setEditMode((prev) => !prev);
 	};
 
-	const parentStyle: React.CSSProperties = {
+	/**
+	 * Precomputed CSS style properties.
+	 */
+
+	// We need to place the segments at the centre of the screen, and then
+	// distribute each segment around the menu radius equally.
+	const internalRadius = Math.round((containerLength * 0.9) / 2);
+	const angle = (2 * Math.PI) / segments.length;
+
+	const segmentPositions = segments.map((val, index) => {
+		let segmentAngle: number = angle * index;
+		if (!opts.offset) {
+			segmentAngle = segmentAngle + angle / 2;
+		}
+		return {
+			...val,
+			angle: segmentAngle,
+			positionX: Math.round(
+				screenResolution[0] / 2 -
+					boxSideLength / 2 +
+					Math.cos(segmentAngle) * internalRadius,
+			),
+			positionY: Math.round(
+				screenResolution[1] / 2 -
+					boxSideLength / 2 +
+					Math.sin(segmentAngle) * internalRadius,
+			),
+		};
+	});
+
+	/**
+	 * CSS styles.
+	 */
+
+	const parentStyle: CSSProperties = {
 		top: 20,
 		height: "100%",
 		width: "100%",
+	};
+
+	const boxStyle: CSSProperties = {
+		position: "absolute",
+	};
+
+	const divStyle: CSSProperties = {
+		height: containerLength,
+		width: containerLength,
+		margin: "auto",
 	};
 
 	return (
@@ -254,10 +283,10 @@ function App(opts: AppProps): JSX.Element {
 							}
 						}}
 					>
-						<Box
+						<Segment
 							debug={debug}
 							hovered={segment.segment === hoveredSegment}
-							visible={visible || editMode}
+							forceVisible={editMode}
 							inCombat={inCombat}
 							key={segment.segment}
 							sideLength={boxSideLength}
@@ -277,7 +306,7 @@ function App(opts: AppProps): JSX.Element {
 							) : (
 								<p>{segment.segment}</p>
 							)}
-						</Box>
+						</Segment>
 					</div>
 				))}
 			</div>

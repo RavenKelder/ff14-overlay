@@ -96,6 +96,7 @@
 	"dependencies": {
 		"@nut-tree/nut-js": "^2.1.1",
 		"@types/node": "^18.7.2",
+		"@types/react-transition-group": "^4.4.5",
 		"@types/tail": "^2.2.1",
 		"@types/wav": "^1.0.1",
 		"async-mutex": "^0.3.2",
@@ -105,6 +106,7 @@
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
 		"react-timer-hook": "^3.0.5",
+		"react-transition-group": "^4.4.5",
 		"speaker": "^0.5.4",
 		"systeminformation": "^5.12.5",
 		"tail": "^2.2.4",

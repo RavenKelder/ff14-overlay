@@ -8,6 +8,8 @@ import { Channel } from "../ipc";
 import { Vec2 } from "../maths";
 import { Parser } from "../parser";
 import { CustomInCombatID, CustomOutOfCombatID } from "../parser/events";
+import { runAndSetInterval } from "../util";
+import { Mutex } from "async-mutex";
 
 export async function setupToggleInteractive(
 	key: string,
@@ -60,6 +62,10 @@ const menuState: MenuState = {
 	open: false,
 };
 
+function getMenuState(): MenuState {
+	return menuState;
+}
+
 export function forceMenuStateOpen(open: boolean) {
 	menuState.open = open;
 }
@@ -78,77 +84,75 @@ export async function setupMenuStateHandler(
 		y: opts.screenSize.y / 2,
 	};
 
+	const menuStateMutex = new Mutex();
+	let lastOpenEvent = new Date();
+	let lastCloseEvent = new Date();
+
 	menuStateHandler = (event) => {
 		if (event.rawKey._nameRaw !== opts.key) {
 			return;
 		}
 
 		if (menuState.open && event.state === "UP") {
-			menuState.open = false;
-			getMenuAndRun(async (w) => {
-				w.webContents.send(Channel.MenuClose);
-
-				return getMenuSelection(
-					centre,
-					opts.escapeRadius,
-					opts.segments,
-				).then((selected) => {
-					if (selected === null) {
-						return;
-					}
-
-					pressKeys(opts.binding[selected]);
-					w.webContents.send(Channel.SegmentHover, -1);
-				});
-			});
-		} else if (!menuState.open && event.state === "DOWN") {
-			menuState.open = true;
-
-			getMenuAndRun(async (w) => {
-				w.webContents.send(Channel.MenuOpen);
-			});
-			sendMouseTo(centre);
-
-			getMenuAndRun(async (w) => {
-				return new Promise((res) => {
-					getMenuSelection(
+			lastCloseEvent = new Date();
+			menuStateMutex.runExclusive(() => {
+				if (lastCloseEvent.getTime() < lastOpenEvent.getTime()) {
+					return;
+				}
+				if (!menuState.open) {
+					return;
+				}
+				menuState.open = false;
+				return getMenuAndRun(async (w) => {
+					return getMenuSelection(
 						centre,
 						opts.escapeRadius,
 						opts.segments,
-					).then((hovered) => {
-						if (hovered !== null) {
-							w.webContents.send(Channel.SegmentHover, hovered);
-						} else {
-							w.webContents.send(Channel.SegmentHover, -1);
+					).then((selected) => {
+						w.webContents.send(Channel.MenuClose, selected);
+
+						if (selected === null) {
+							return;
 						}
-
-						const timer = setInterval(() => {
-							if (!menuState.open) {
-								clearInterval(timer);
-								res();
-								return;
-							}
-
-							getMenuSelection(
-								centre,
-								opts.escapeRadius,
-								opts.segments,
-							).then((hovered) => {
-								if (hovered !== null) {
-									w.webContents.send(
-										Channel.SegmentHover,
-										hovered,
-									);
-								} else {
-									w.webContents.send(
-										Channel.SegmentHover,
-										-1,
-									);
-								}
-							});
-						}, 50);
+						pressKeys(opts.binding[selected]);
+						w.webContents.send(Channel.SegmentHover, -1);
 					});
 				});
+			});
+		} else if (!menuState.open && event.state === "DOWN") {
+			lastOpenEvent = new Date();
+			menuStateMutex.runExclusive(() => {
+				if (lastOpenEvent.getTime() < lastCloseEvent.getTime()) {
+					return;
+				}
+				if (menuState.open) {
+					return;
+				}
+				runAndSetInterval((num) => {
+					return getMenuAndRun(async (w) => {
+						if (
+							lastOpenEvent.getTime() < lastCloseEvent.getTime()
+						) {
+							return false;
+						}
+						if (num === 0) {
+							menuState.open = true;
+							sendMouseTo(centre);
+						}
+
+						w.webContents.send(Channel.MenuOpen);
+
+						const result = await getMenuSelection(
+							centre,
+							opts.escapeRadius,
+							opts.segments,
+						);
+
+						w.webContents.send(Channel.SegmentHover, result ?? -1);
+
+						return getMenuState().open;
+					});
+				}, 1);
 			});
 		}
 	};
