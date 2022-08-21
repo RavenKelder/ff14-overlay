@@ -1,40 +1,12 @@
-import { Parser, ParserOptions } from "./pkg/parser";
-import { setupCooldownEvents, setupMenuStateHandler } from "./pkg/window";
+import { setupMenuStateHandler } from "./pkg/window";
 import abilityconfig from "./pkg/config/";
 import { getResolution, getScreenFactor } from "./pkg/system/display";
-import {
-	Channel,
-	setupAbilityCharges,
-	setupFileResponse,
-	setupStartOK,
-} from "./pkg/ipc";
+import { Channel, setupFileResponse, setupStartOK } from "./pkg/ipc";
 import { getExistingFiles } from "./pkg/file";
 import { forceMenuStateOpen } from "./pkg/window/keyevents";
 import { multiplyVec2 } from "./pkg/maths";
-import { setupCombatTrigger } from "./pkg/window/parserevents";
 import "./pkg/system/sound";
 import { setupPollActiveWindow } from "./pkg/system/focus";
-
-const parserOpts: ParserOptions = {
-	defaultPrimaryPlayer: "Raven Kelder",
-	abilities: Object.values(abilityconfig.abilities),
-	bindings: Object.values(abilityconfig.bindings),
-};
-
-if (parserOpts.defaultPrimaryPlayer !== "") {
-	console.log(
-		`Using default primary player: ${parserOpts.defaultPrimaryPlayer}`,
-	);
-}
-
-const parser = new Parser(parserOpts);
-
-function setupParseLog() {
-	parser.hooks.attachGlobal((e) => {
-		const out = e.string();
-		console.log(`[${e.ID}|${e.timestamp.toISOString()}] ${out}`);
-	});
-}
 
 let appReady = false;
 
@@ -68,9 +40,6 @@ const defaultStartOptions: Required<StartOptions> = {
 };
 
 async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
-	if (opts.debug) {
-		setupParseLog();
-	}
 	const commandBinding: Record<number, string[]> = {};
 	for (const b in abilityconfig.bindings) {
 		commandBinding[abilityconfig.bindings[b].segment] =
@@ -94,7 +63,6 @@ async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
 	setupStartOK(startOptions, (event) => {
 		console.log("Menu window OK.");
 		forceMenuStateOpen(false);
-		parser.setInCombat(false);
 		getExistingFiles().then((icons) => {
 			icons.forEach((icon) => {
 				event.reply(Channel.FileReceive, icon.base64, icon.index);
@@ -104,10 +72,6 @@ async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
 	});
 
 	setupFileResponse();
-
-	setupAbilityCharges(parser);
-	setupCooldownEvents(parser, segmentBinding);
-	setupCombatTrigger(parser);
 
 	setupPollActiveWindow();
 
@@ -121,12 +85,10 @@ async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
 			binding: commandBinding,
 			sendMouseToCentre: abilityconfig.sendMouseToCentre,
 		}),
-		parser.start(),
 	]);
 }
 
 function stop(): Promise<void> {
-	parser.stop();
 	return new Promise((res) => res());
 }
 

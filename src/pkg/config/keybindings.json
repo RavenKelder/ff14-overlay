@@ -4,8 +4,8 @@
 	"toggleInteractiveUI": "F5",
 	"restartUI": "F8",
 	"closeUI": "F6",
-	"openGameUI": ["shift", "["],
-	"closeGameUI": ["shift", "]"],
+	"openGameUI": [],
+	"closeGameUI": [],
 	"segments": [
 		{
 			"segment": 0,
