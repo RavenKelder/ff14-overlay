@@ -1,6 +1,5 @@
 import { dialog, ipcMain, IpcMainEvent } from "electron";
 import { getFileBase64 } from "../file";
-import { Parser } from "../parser";
 import { pressKeys } from "../system/keyboard";
 
 export enum Channel {
@@ -79,19 +78,4 @@ export function setupSegmentSelect(binding: Record<number, string[]>) {
 // Setup sending icon file data to menu.
 export function setupFileResponse() {
 	ipcMain.on(Channel.FileRequest, fileReceive);
-}
-
-export function setupAbilityCharges(parser: Parser) {
-	ipcMain.on(Channel.AbilityChargesRequest, (event, segment) => {
-		if (typeof segment !== "number") {
-			console.error(
-				`unexpected typeof segment ${typeof segment}: ${JSON.stringify(
-					segment,
-				)}`,
-			);
-			return;
-		}
-		const ability = parser.getAbilityBySegment(segment);
-		event.reply(Channel.AbilityChargesReceive, segment, ability);
-	});
 }

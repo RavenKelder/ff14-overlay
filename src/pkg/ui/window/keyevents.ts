@@ -4,8 +4,6 @@ import { getMenuAndRun, mustGetMenu } from ".";
 import { pressKeys, setupListener } from "../system/keyboard";
 import { Channel } from "../ipc";
 import { Vec2 } from "../maths";
-import { Parser } from "../parser";
-import { CustomInCombatID, CustomOutOfCombatID } from "../parser/events";
 import { sendMouseTo } from "../system/mouse";
 
 const MENU_EVENT_POLL_RATE = 50;
@@ -29,20 +27,6 @@ export async function setupToggleInteractive(
 				menu.setFocusable(true);
 			}
 		});
-	});
-}
-
-export async function setupCombatToggle(
-	parser: Parser,
-	inCombatCommand: string[],
-	outOfCombatCommand: string[],
-) {
-	parser.hooks.attach(CustomInCombatID, () => {
-		pressKeys(inCombatCommand);
-	});
-
-	parser.hooks.attach(CustomOutOfCombatID, () => {
-		pressKeys(outOfCombatCommand);
 	});
 }
 

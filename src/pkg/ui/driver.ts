@@ -1,12 +1,12 @@
-import { setupMenuStateHandler } from "./pkg/window";
-import abilityconfig from "./pkg/config/";
-import { getResolution, getScreenFactor } from "./pkg/system/display";
-import { Channel, setupFileResponse, setupStartOK } from "./pkg/ipc";
-import { getExistingFiles } from "./pkg/file";
-import { forceMenuStateOpen } from "./pkg/window/keyevents";
-import { multiplyVec2 } from "./pkg/maths";
-import "./pkg/system/sound";
-import { setupPollActiveWindow } from "./pkg/system/focus";
+import { setupMenuStateHandler } from "./window";
+import abilityconfig from "../config";
+import { getResolution, getScreenFactor } from "./system/display";
+import { Channel, setupFileResponse, setupStartOK } from "./ipc";
+import { getExistingFiles } from "./file";
+import { forceMenuStateOpen } from "./window/keyevents";
+import { multiplyVec2 } from "./maths";
+import "./system/sound";
+import { setupPollActiveWindow } from "./system/focus";
 
 let appReady = false;
 

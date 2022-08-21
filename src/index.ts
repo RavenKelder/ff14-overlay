@@ -1,8 +1,12 @@
 import { app, BrowserWindow, globalShortcut } from "electron";
 
-import "./pkg/system/keyboard";
-import driver from "./driver";
-import { createMenu, restartMenu, setupToggleInteractive } from "./pkg/window";
+import "./pkg/ui/system/keyboard";
+import driver from "./pkg/ui/driver";
+import {
+	createMenu,
+	restartMenu,
+	setupToggleInteractive,
+} from "./pkg/ui/window";
 import config from "./pkg/config";
 
 const DEBUG = process.env.DEBUG ? true : false;

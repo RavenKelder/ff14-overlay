@@ -1,15 +1,15 @@
-import { getMenuAndRun } from ".";
+import { getMenuAndRun } from "../ui/window";
 import config from "../config";
-import { Channel } from "../ipc";
-import { Parser } from "../parser";
+import { Channel } from "../ui/ipc";
+import { Parser } from "./parser";
 import {
 	CustomInCombatID,
 	CustomOnCooldown,
 	CustomOnCooldownID,
 	CustomOutOfCombatID,
-} from "../parser/events";
-import { pressKeys } from "../system/keyboard";
-import { play } from "../system/sound";
+} from "./parser/events";
+import { pressKeys } from "../ui/system/keyboard";
+import { play } from "../ui/system/sound";
 
 const WARNING_ABILITIES = ["Battle Litany", "Lance Charge", "Nastrond"];
 
@@ -17,7 +17,7 @@ export function setupCooldownEvents(
 	parser: Parser,
 	binding: Record<string, number>,
 ) {
-	parser.hooks.attach(CustomOnCooldownID, (event) => {
+	parser.hooks.attach(CustomOnCooldownID, (event: unknown) => {
 		if (!(event instanceof CustomOnCooldown)) {
 			return;
 		}

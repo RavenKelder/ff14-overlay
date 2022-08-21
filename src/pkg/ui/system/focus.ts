@@ -1,5 +1,5 @@
 import { getActiveWindow } from "@nut-tree/nut-js";
-import config from "../config";
+import config from "../../config";
 import { getMenuAndRun } from "../window";
 
 let timer: NodeJS.Timer | null = null;

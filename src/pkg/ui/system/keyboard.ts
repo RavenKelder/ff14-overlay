@@ -3,7 +3,7 @@ import { keyboard, Key } from "@nut-tree/nut-js";
 import { Library } from "ffi-napi";
 import { DllFuncsModel, SHORT, INT } from "win32-def";
 
-import config from "../config";
+import config from "../../config";
 
 export interface Win32Fns extends DllFuncsModel {
 	GetKeyState(nVirtKey: INT): SHORT;
