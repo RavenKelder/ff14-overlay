@@ -1,15 +1,14 @@
 import { mouse, Point } from "@nut-tree/nut-js";
 import { globalShortcut } from "electron";
-import { IGlobalKeyEvent } from "node-global-key-listener";
-import { getMenuAndRun } from ".";
-import { addListener, pressKeys, removeListener } from "../system/keyboard";
-import { sendMouseTo } from "../system/mouse";
+import { getMenuAndRun, mustGetMenu } from ".";
+import { pressKeys, setupListener } from "../system/keyboard";
 import { Channel } from "../ipc";
 import { Vec2 } from "../maths";
 import { Parser } from "../parser";
 import { CustomInCombatID, CustomOutOfCombatID } from "../parser/events";
-import { runAndSetInterval } from "../util";
-import { Mutex } from "async-mutex";
+import { sendMouseTo } from "../system/mouse";
+
+const MENU_EVENT_POLL_RATE = 50;
 
 export async function setupToggleInteractive(
 	key: string,
@@ -48,6 +47,7 @@ export async function setupCombatToggle(
 }
 
 interface SetupMenuStateHandlerOptions {
+	sendMouseToCentre: boolean;
 	key: string;
 	escapeRadius: number;
 	segments: number;
@@ -62,21 +62,17 @@ const menuState: MenuState = {
 	open: false,
 };
 
-function getMenuState(): MenuState {
-	return menuState;
-}
-
 export function forceMenuStateOpen(open: boolean) {
 	menuState.open = open;
 }
 
-let menuStateHandler: (event: IGlobalKeyEvent) => void;
+let currentMenuStateHandlerTimer: NodeJS.Timer;
 
 export async function setupMenuStateHandler(
 	opts: SetupMenuStateHandlerOptions,
 ) {
-	if (menuStateHandler) {
-		removeListener(menuStateHandler);
+	if (currentMenuStateHandlerTimer) {
+		clearInterval(currentMenuStateHandlerTimer);
 	}
 
 	const centre: Vec2 = {
@@ -84,80 +80,47 @@ export async function setupMenuStateHandler(
 		y: opts.screenSize.y / 2,
 	};
 
-	const menuStateMutex = new Mutex();
-	let lastOpenEvent = new Date();
-	let lastCloseEvent = new Date();
-
-	menuStateHandler = (event) => {
-		if (event.rawKey._nameRaw !== opts.key) {
-			return;
-		}
-
-		if (menuState.open && event.state === "UP") {
-			lastCloseEvent = new Date();
-			menuStateMutex.runExclusive(() => {
-				if (lastCloseEvent.getTime() < lastOpenEvent.getTime()) {
-					return;
-				}
-				if (!menuState.open) {
-					return;
-				}
-				menuState.open = false;
-				return getMenuAndRun(async (w) => {
-					return getMenuSelection(
+	setupListener(
+		121,
+		(event) => {
+			const menu = mustGetMenu();
+			if (menu === null) {
+				return;
+			}
+			if (event >= 0) {
+				if (menuState.open) {
+					getMenuSelection(
 						centre,
 						opts.escapeRadius,
 						opts.segments,
-					).then((selected) => {
-						w.webContents.send(Channel.MenuClose, selected);
-
-						if (selected === null) {
-							return;
+					).then((result) => {
+						menu.webContents.send(Channel.MenuClose, result ?? -1);
+						if (result !== null) {
+							pressKeys(opts.binding[result]);
 						}
-						pressKeys(opts.binding[selected]);
-						w.webContents.send(Channel.SegmentHover, -1);
 					});
-				});
-			});
-		} else if (!menuState.open && event.state === "DOWN") {
-			lastOpenEvent = new Date();
-			menuStateMutex.runExclusive(() => {
-				if (lastOpenEvent.getTime() < lastCloseEvent.getTime()) {
-					return;
 				}
-				if (menuState.open) {
-					return;
+				menuState.open = false;
+			} else {
+				if (!menuState.open) {
+					if (opts.sendMouseToCentre) {
+						sendMouseTo(centre);
+					}
+					menu.webContents.send(Channel.MenuOpen);
 				}
-				runAndSetInterval((num) => {
-					return getMenuAndRun(async (w) => {
-						if (
-							lastOpenEvent.getTime() < lastCloseEvent.getTime()
-						) {
-							return false;
-						}
-						if (num === 0) {
-							menuState.open = true;
-							sendMouseTo(centre);
-						}
-
-						w.webContents.send(Channel.MenuOpen);
-
-						const result = await getMenuSelection(
-							centre,
-							opts.escapeRadius,
-							opts.segments,
+				menuState.open = true;
+				getMenuSelection(centre, opts.escapeRadius, opts.segments).then(
+					(result) => {
+						menu.webContents.send(
+							Channel.SegmentHover,
+							result ?? -1,
 						);
-
-						w.webContents.send(Channel.SegmentHover, result ?? -1);
-
-						return getMenuState().open;
-					});
-				}, 1);
-			});
-		}
-	};
-
-	addListener(menuStateHandler);
+					},
+				);
+			}
+		},
+		MENU_EVENT_POLL_RATE,
+	);
 }
 
 async function getMenuSelection(

@@ -24,6 +24,8 @@ import { Hook, HookManager } from "../hooks";
 import { appWhenReady } from "../../driver";
 import { AbilityManager } from "./ability";
 
+const FILE_WATCH_POLL_RATE = 50;
+
 interface State {
 	primaryPlayer: string;
 	primaryPlayerID: string;
@@ -39,7 +41,7 @@ export interface ParserOptions {
 }
 
 export class Parser {
-	refreshPollRateMs = 60000;
+	refreshPollRateMs = 360000;
 	currentTailDir: string | null = null;
 	currentTailFile: string | null = null;
 	currentTail: Tail | null = null;
@@ -118,7 +120,7 @@ export class Parser {
 		this.currentTail = new Tail(latestFile, {
 			useWatchFile: true,
 			fsWatchOptions: {
-				interval: 10,
+				interval: FILE_WATCH_POLL_RATE,
 			},
 		});
 

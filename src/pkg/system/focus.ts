@@ -10,6 +10,9 @@ let hidden = false;
 // window. Since the menu window goes on top of everything, not doing this causes
 // the taskbar to be hidden even when tabbed out of the game.
 export function setupPollActiveWindow() {
+	if (process.env.DEBUG) {
+		return;
+	}
 	timer = setInterval(() => {
 		getActiveWindow().then((w) => {
 			w.title.then((t) => {
@@ -26,7 +29,7 @@ export function setupPollActiveWindow() {
 				}
 			});
 		});
-	}, 100);
+	}, 500);
 }
 
 export function stopPollActiveWindow() {

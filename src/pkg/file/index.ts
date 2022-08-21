@@ -20,7 +20,7 @@ export async function getExistingFiles(): Promise<Icon[]> {
 				if (err !== null) {
 					rej(err);
 				} else {
-					const index = parseInt(path.basename(filename, ".jpg"));
+					const index = parseInt(path.basename(filename, ".png"));
 					res({
 						index: index,
 						base64: !isNaN(index) ? data.toString("base64") : "",
@@ -50,7 +50,7 @@ export async function getFileBase64(
 	});
 
 	new Promise((res, rej) => {
-		fs.writeFile(path.join(iconsDir, `${index}.jpg`), f, (err) => {
+		fs.writeFile(path.join(iconsDir, `${index}.png`), f, (err) => {
 			if (err !== null) {
 				rej(err);
 			} else {

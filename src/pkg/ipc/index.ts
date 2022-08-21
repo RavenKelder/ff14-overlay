@@ -25,7 +25,7 @@ let segmentSelect: (event: IpcMainEvent, index: number) => void;
 function fileReceive(event: IpcMainEvent, index: number) {
 	const result = dialog.showOpenDialog({
 		properties: ["openFile"],
-		filters: [{ name: "Images", extensions: ["png", "jpg", "jpeg"] }],
+		filters: [{ name: "Images", extensions: ["png"] }],
 	});
 
 	result.then(({ canceled, filePaths }) => {

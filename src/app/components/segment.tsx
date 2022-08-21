@@ -4,11 +4,17 @@ import { useTimer } from "react-timer-hook";
 import { AbilityState, Channel } from "../ipc";
 import Centred from "./centered";
 
-const BORDER_WIDTH = 4;
+const BORDER_WIDTH = 2;
+const BORDER_WIDTH_HOVERED = 4;
+const BORDER_RADIUS = 8;
+const BORDER_RADIUS_HOVERED = 11;
+const BORDER_COLOUR = "#deddba";
+const BORDER_SHADOW_COLOUR = "#7d7c68";
 const NEAR_OFF_COOLDOWN = 10;
 const NEAR_OFF_COOLDOWN_OPACITY = 0.9;
-const OFF_COOLDOWN_FADE_TIME = 100;
-const ON_COOLDOWN_FADE_TIME = 300;
+const FADE_IN_TIME = 200;
+const OFF_COOLDOWN_FADE_TIME = 200;
+const ON_COOLDOWN_FADE_TIME = 400;
 const IN_COMBAT_OPACITY = 0.4;
 const SEGMENT_SELECT_DELAY = 500;
 
@@ -17,6 +23,7 @@ interface BoxProps {
 	children: React.ReactNode;
 	style?: React.CSSProperties;
 	forceVisible?: boolean;
+	totalSegments: number;
 	segment: number;
 	inCombat: boolean;
 	hovered: boolean;
@@ -62,6 +69,8 @@ export default function Segment(props: BoxProps): JSX.Element {
 	if (props.forceVisible) {
 		visible = true;
 	}
+
+	const borderWidth = props.hovered ? BORDER_WIDTH_HOVERED : BORDER_WIDTH;
 
 	/**
 	 * useEffects.
@@ -170,9 +179,13 @@ export default function Segment(props: BoxProps): JSX.Element {
 
 	const totalSeconds = seconds + minutes * 60;
 
+	const percentage = totalSeconds === 0 ? 0 : (100 * totalSeconds) / cooldown;
+
 	// Setup transition opacities.
 	const openOpacity = 1;
-	let closeOpacity = 0;
+	let closeOpacity = props.debug ? 0.3 : 0;
+
+	const borderRadius = props.hovered ? BORDER_RADIUS_HOVERED : BORDER_RADIUS;
 
 	// In combat, the segment may show up with a non-zero opacity, as well as
 	// when an ability is near off cooldown.
@@ -189,7 +202,7 @@ export default function Segment(props: BoxProps): JSX.Element {
 	// When this component is going to be visible, the fade in time should be
 	// instantaneous. When this component is going to not be visible, the fade
 	// out time should be determined by fadeOutTime.
-	const duration = visible ? 0 : fadeOutTime;
+	const duration = visible ? FADE_IN_TIME : fadeOutTime;
 
 	// Determine brightness by whether there are charges remaining (i.e. ability
 	// can still be used) and whether it is hovered.
@@ -223,7 +236,7 @@ export default function Segment(props: BoxProps): JSX.Element {
 	const cooldownStyle: CSSProperties = {
 		position: "absolute",
 		fontSize: totalSeconds > 99 ? 25 : 30,
-		zIndex: totalSeconds > 0 ? 1000 : -10,
+		zIndex: totalSeconds > 0 ? 1003 : -10,
 		transform: `translate(-50%, 0%)`,
 		margin: "auto",
 		top: totalSeconds > 99 ? 7 : 3,
@@ -234,35 +247,57 @@ export default function Segment(props: BoxProps): JSX.Element {
 	const chargesStyle: CSSProperties = {
 		position: "absolute",
 		fontSize: 18,
-		zIndex: 1000,
+		zIndex: 1002,
 		transform: `translate(${props.sideLength / 2 - 7}px, ${
 			props.sideLength - 14
 		}px)`,
 		margin: "auto",
 		color: "white",
 		opacity: maxCharges > 1 ? 1 : 0,
-		WebkitTextStroke: "1px black",
+		// WebkitTextStroke: "1px red",
+		textShadow: `0 0 5px red`,
 	};
 
 	let iconStyle: CSSProperties = {
+		zIndex: 1000,
 		position: "absolute",
-		transform: `translate(-${Math.round(props.sideLength / 2)}px, 0%)`,
 		filter: `brightness(${brightness}%)`,
 		height: props.sideLength,
 		width: props.sideLength,
+		transform: `translate(-${
+			Math.round(props.sideLength / 2) + borderWidth
+		}px, -${borderWidth}px)`,
+		borderWidth: borderWidth,
+		borderColor: "#000",
+		borderStyle: "solid",
+		borderRadius: borderRadius,
+	};
+
+	let borderStyle: CSSProperties = {
+		transform: `translate(-${
+			Math.round(props.sideLength / 2) + borderWidth
+		}px, -${borderWidth}px)`,
+		position: "absolute",
+		height: props.sideLength,
+		width: props.sideLength,
+		borderWidth: borderWidth,
+		borderColor: "#000",
+		borderStyle: "solid",
+		boxShadow: `0 0 6px black`,
+		borderRadius: borderRadius,
+		zIndex: 1001,
 	};
 
 	if (props.hovered) {
+		borderStyle = {
+			...borderStyle,
+			borderColor: BORDER_COLOUR,
+			boxShadow: `0 0 15px ${BORDER_SHADOW_COLOUR}`,
+		};
 		iconStyle = {
 			...iconStyle,
-			transform: `translate(-${
-				Math.round(props.sideLength / 2) + BORDER_WIDTH
-			}px, -${BORDER_WIDTH}px)`,
-			borderWidth: BORDER_WIDTH,
-			borderColor: "#c7c58d",
-			borderStyle: "solid",
-			borderRadius: 10,
-			boxShadow: "0 0 15px #c7c58d",
+			borderColor: BORDER_COLOUR,
+			boxShadow: `0 0 15px ${BORDER_SHADOW_COLOUR}`,
 		};
 	}
 
@@ -275,6 +310,7 @@ export default function Segment(props: BoxProps): JSX.Element {
 						...transitionStyles[state],
 					}}
 				>
+					<div style={borderStyle}></div>
 					<b style={cooldownStyle}>{totalSeconds}</b>
 					<b style={chargesStyle}>{charges}</b>
 					<div style={iconStyle}>{props.children}</div>

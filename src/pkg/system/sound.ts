@@ -6,6 +6,8 @@ import wav from "wav";
 const SOUNDS_DIR = "./assets/sounds";
 
 export function play(filename: string) {
+	// Disable sound for now - this is not a good way to do it.
+	return;
 	fs.open(path.join(SOUNDS_DIR, `${filename}.wav`), (err) => {
 		if (err !== null) {
 			console.error(`Failed playing sound ${filename}: ${err}`);

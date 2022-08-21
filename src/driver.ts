@@ -119,6 +119,7 @@ async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
 			screenSize: multiplyVec2(screenSize, screenFactor),
 			segments: opts.segments ?? defaultStartOptions.segments,
 			binding: commandBinding,
+			sendMouseToCentre: abilityconfig.sendMouseToCentre,
 		}),
 		parser.start(),
 	]);

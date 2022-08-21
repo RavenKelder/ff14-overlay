@@ -7,6 +7,7 @@ const DEFAULT_ACT_LOG_DIR =
 const ASSETS_DIR = "assets";
 
 const bufferLeniency = abilityconfig.bufferLeniency;
+const sendMouseToCentre = keybindingsconfig.sendMouseToCentre;
 
 export interface Ability {
 	name: string;
@@ -62,4 +63,5 @@ export default {
 	bindings,
 	bufferLeniency,
 	uiBindings,
+	sendMouseToCentre,
 };

@@ -45,6 +45,10 @@ export async function createMenu(opts: CreateMenuOptions = {}): Promise<void> {
 	await restartMenu(opts);
 }
 
+export function mustGetMenu(): BrowserWindow | null {
+	return currentMenu;
+}
+
 export async function getMenuAndRun<T>(
 	command: (menu: BrowserWindow) => Promise<T>,
 ): Promise<T> {

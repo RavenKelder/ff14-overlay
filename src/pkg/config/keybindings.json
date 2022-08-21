@@ -1,4 +1,5 @@
 {
+	"sendMouseToCentre": false,
 	"openMenu": "F10",
 	"toggleInteractiveUI": "F5",
 	"restartUI": "F8",

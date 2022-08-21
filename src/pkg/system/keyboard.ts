@@ -1,14 +1,19 @@
 import { ipcMain } from "electron";
 import { keyboard, Key } from "@nut-tree/nut-js";
-import path from "path";
-import {
-	GlobalKeyboardListener,
-	IGlobalKeyListener,
-} from "node-global-key-listener";
+import { Library } from "ffi-napi";
+import { DllFuncsModel, SHORT, INT } from "win32-def";
 
 import config from "../config";
 
-keyboard.config.autoDelayMs = 3;
+export interface Win32Fns extends DllFuncsModel {
+	GetKeyState(nVirtKey: INT): SHORT;
+}
+
+export const user32: Win32Fns = Library("user32.dll", {
+	GetKeyState: ["short", ["int"]],
+});
+
+keyboard.config.autoDelayMs = 5;
 
 ipcMain.on("segment-select", (event, index: number) => {
 	if (config.bindings[index]) {
@@ -84,21 +89,16 @@ function mapKey(input: string): Key | null {
 	return null;
 }
 
-const listener = new GlobalKeyboardListener({
-	windows: {
-		serverPath: path.join(
-			__dirname,
-			"../../node_modules/node-global-key-listener/bin/WinKeyServer.exe",
-		),
-	},
-});
+export type KeyboardListener = (state: number) => void;
 
-export function addListener(l: IGlobalKeyListener) {
-	listener.addListener(l).catch((err) => {
-		console.error(`failed to add listener: ${err}`);
-	});
-}
+export function setupListener(
+	key: number,
+	l: KeyboardListener,
+	interval: number,
+): NodeJS.Timer {
+	const timer = setInterval(() => {
+		l(user32.GetKeyState(key));
+	}, interval);
 
-export function removeListener(l: IGlobalKeyListener) {
-	listener.removeListener(l);
+	return timer;
 }

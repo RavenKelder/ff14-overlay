@@ -284,6 +284,7 @@ function App(opts: AppProps): JSX.Element {
 						}}
 					>
 						<Segment
+							totalSegments={segments.length}
 							debug={debug}
 							hovered={segment.segment === hoveredSegment}
 							forceVisible={editMode}
