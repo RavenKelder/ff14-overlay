@@ -28,7 +28,10 @@ export interface CreateMenuOptions {
 	debug?: boolean;
 }
 
-export async function createMenu(opts: CreateMenuOptions = {}): Promise<void> {
+let lastCreateMenuOptions: CreateMenuOptions = {};
+
+export async function createMenu(opts = lastCreateMenuOptions): Promise<void> {
+	lastCreateMenuOptions = opts;
 	await mutex.waitForUnlock();
 	const release = await mutex.acquire();
 	if (currentMenu !== null) {
@@ -78,7 +81,7 @@ export async function getMenuAndRun<T>(
 	});
 }
 
-export async function restartMenu(opts: CreateMenuOptions = {}): Promise<void> {
+export async function restartMenu(opts = lastCreateMenuOptions): Promise<void> {
 	await new Promise<void>((res) => {
 		const timer = setInterval(() => {
 			if (runningCommands === 0) {
@@ -104,6 +107,7 @@ export async function restartMenu(opts: CreateMenuOptions = {}): Promise<void> {
 		width: width,
 		webPreferences: {
 			preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+			backgroundThrottling: false,
 		},
 		alwaysOnTop: true,
 		transparent: true,

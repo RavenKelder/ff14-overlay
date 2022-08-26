@@ -1,18 +1,16 @@
-import { app, BrowserWindow, globalShortcut } from "electron";
+import { app, BrowserWindow } from "electron";
 
 import "./pkg/ui/system/keyboard";
 import driver from "./pkg/ui/driver";
-import {
-	createMenu,
-	restartMenu,
-	setupToggleInteractive,
-} from "./pkg/ui/window";
+import { createMenu, setupToggleInteractive } from "./pkg/ui/window";
 import config from "./pkg/config";
+import { createTray } from "./tray";
+import { profileReady } from "./pkg/ui/profiles";
 
 const DEBUG = process.env.DEBUG ? true : false;
 
 function main() {
-	driver
+	const driverReady = driver
 		.start({
 			menuOpenKey: config.uiBindings.openMenu,
 			debug: DEBUG,
@@ -30,44 +28,23 @@ function main() {
 	// This method will be called when Electron has finished
 	// initialization and is ready to create browser windows.
 	// Some APIs can only be used after this event occurs.
-	app.on("ready", () => {
-		createMenu({ debug: DEBUG })
-			.then(() => {
-				setupToggleInteractive(
-					config.uiBindings.toggleInteractiveUI,
-					DEBUG,
-				).then((ok) => {
-					if (!ok) {
-						console.error(`Toggle interactive setup failed.`);
-					}
-				});
-
-				let ret = globalShortcut.register(
-					config.uiBindings.closeUI,
-					() => {
-						close();
-					},
-				);
-
-				if (!ret) {
-					console.log("Close key setup failed.");
-				}
-
-				ret = globalShortcut.register(
-					config.uiBindings.restartUI,
-					() => {
-						restartMenu();
-					},
-				);
-
-				if (!ret) {
-					console.log("Restart key setup failed.");
-				}
-			})
-			.catch((err) => {
-				console.error(`Failed to start app: ${err}`);
-				close();
-			});
+	app.on("ready", async () => {
+		try {
+			await profileReady;
+			await driverReady;
+			await createMenu({ debug: DEBUG });
+			await createTray({ icon: "assets/tray.png" });
+			const ok = await setupToggleInteractive(
+				config.uiBindings.toggleInteractiveUI,
+				DEBUG,
+			);
+			if (!ok) {
+				console.error(`Toggle interactive setup failed.`);
+			}
+		} catch (err) {
+			console.error(`Failed starting app: ${err}`);
+			app.quit();
+		}
 	});
 
 	// Quit when all windows are closed, except on macOS. There, it's common
@@ -86,17 +63,6 @@ function main() {
 			createMenu({ debug: DEBUG });
 		}
 	});
-}
-
-function close() {
-	driver
-		.stop()
-		.catch((err) => {
-			console.error(err);
-		})
-		.finally(() => {
-			app.quit();
-		});
 }
 
 main();

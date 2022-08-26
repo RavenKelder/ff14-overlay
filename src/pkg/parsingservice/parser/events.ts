@@ -1,4 +1,4 @@
-import { Vec3 } from "../maths";
+import { Vec3 } from "../../ui/maths";
 import { calculateDirectional } from "./utils";
 
 export const LogLineID = "00",
@@ -42,6 +42,7 @@ export const LogLineID = "00",
 	CustomOutOfCombatID = "C01",
 	CustomOnCooldownID = "C02",
 	CustomOffCooldownID = "C03",
+	CustomCombatStatusID = "C04",
 	DELIMITER = "|";
 
 export class ParseEvent {
@@ -190,5 +191,31 @@ export class CustomOnCooldown extends ParseEvent {
 		super("");
 		this.ID = CustomOnCooldownID;
 		this.ability = ability;
+	}
+}
+
+export interface CombatStatusRaw {
+	Encounter: Record<string, string>;
+	Combatant: Record<string, Record<string, string>>;
+	isActive: string;
+}
+
+export interface CombatStatus {
+	encounter: Record<string, string>;
+	combatant: Record<string, Record<string, string>>;
+	isActive: boolean;
+}
+
+export class CustomCombatStatus extends ParseEvent {
+	status: CombatStatus;
+
+	constructor(message: CombatStatusRaw) {
+		super("");
+		this.ID = CustomCombatStatusID;
+		this.status = {
+			encounter: message.Encounter,
+			combatant: message.Combatant,
+			isActive: message.isActive === "true",
+		};
 	}
 }

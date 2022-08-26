@@ -5,8 +5,9 @@ import { pressKeys, setupListener } from "../system/keyboard";
 import { Channel } from "../ipc";
 import { Vec2 } from "../maths";
 import { sendMouseTo } from "../system/mouse";
+import { getCurrentProfileBinding } from "../profiles";
 
-const MENU_EVENT_POLL_RATE = 50;
+const MENU_EVENT_POLL_RATE = 5;
 
 export async function setupToggleInteractive(
 	key: string,
@@ -36,7 +37,6 @@ interface SetupMenuStateHandlerOptions {
 	escapeRadius: number;
 	segments: number;
 	screenSize: Vec2;
-	binding: Record<number, string[]>;
 }
 interface MenuState {
 	open: boolean;
@@ -80,7 +80,17 @@ export async function setupMenuStateHandler(
 					).then((result) => {
 						menu.webContents.send(Channel.MenuClose, result ?? -1);
 						if (result !== null) {
-							pressKeys(opts.binding[result]);
+							getCurrentProfileBinding({
+								segment: result,
+							}).then((binding) => {
+								if (binding === null) {
+									console.warn(
+										`Empty binding for segment ${result}`,
+									);
+								} else {
+									pressKeys(binding.command);
+								}
+							});
 						}
 					});
 				}

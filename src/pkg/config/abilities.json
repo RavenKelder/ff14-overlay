@@ -71,6 +71,50 @@
 			"abilityName": "True North",
 			"cooldown": 45,
 			"charges": 2
+		},
+		{
+			"abilityName": "Heart of Light",
+			"cooldown": 90
+		},
+		{
+			"abilityName": "Camouflage",
+			"cooldown": 90
+		},
+		{
+			"abilityName": "Superbolide",
+			"cooldown": 360
+		},
+		{
+			"abilityName": "Shirk",
+			"cooldown": 120
+		},
+		{
+			"abilityName": "Heart of Stone",
+			"cooldown": 25
+		},
+		{
+			"abilityName": "Reprisal",
+			"cooldown": 60
+		},
+		{
+			"abilityName": "Rampart",
+			"cooldown": 90
+		},
+		{
+			"abilityName": "Nebula",
+			"cooldown": 120
+		},
+		{
+			"abilityName": "Provoke",
+			"cooldown": 30
+		},
+		{
+			"abilityName": "Bloodfest",
+			"cooldown": 90
+		},
+		{
+			"abilityName": "Aurora",
+			"cooldown": 60
 		}
 	]
 }

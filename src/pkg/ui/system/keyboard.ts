@@ -3,24 +3,27 @@ import { keyboard, Key } from "@nut-tree/nut-js";
 import { Library } from "ffi-napi";
 import { DllFuncsModel, SHORT, INT } from "win32-def";
 
-import config from "../../config";
+import { getCurrentProfileBinding } from "../profiles";
 
 export interface Win32Fns extends DllFuncsModel {
 	GetKeyState(nVirtKey: INT): SHORT;
+	GetAsyncKeyState(vKey: INT): SHORT;
 }
 
 export const user32: Win32Fns = Library("user32.dll", {
 	GetKeyState: ["short", ["int"]],
+	GetAsyncKeyState: ["short", ["int"]],
 });
 
 keyboard.config.autoDelayMs = 5;
 
-ipcMain.on("segment-select", (event, index: number) => {
-	if (config.bindings[index]) {
-		const keys = config.bindings[index].command;
-
-		pressKeys(keys);
-	}
+ipcMain.on("segment-select", (event, segment: number) => {
+	getCurrentProfileBinding({ segment }).then((binding) => {
+		if (binding === null) {
+			return;
+		}
+		pressKeys(binding.command);
+	});
 });
 
 export async function pressKeys(keys: string[]) {
@@ -32,7 +35,7 @@ export async function pressKeys(keys: string[]) {
 	});
 
 	await keyboard.pressKey(...nonNullPresses);
-	await waitRandom(5, 20);
+	await waitRandom(75, 150);
 
 	await keyboard.releaseKey(...nonNullPresses);
 }
@@ -84,6 +87,8 @@ function mapKey(input: string): Key | null {
 			return Key.LeftBracket;
 		case "]":
 			return Key.RightBracket;
+		case "\\":
+			return Key.Backslash;
 	}
 
 	return null;

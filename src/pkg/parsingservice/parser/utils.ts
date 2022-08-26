@@ -1,4 +1,4 @@
-import { Vec3 } from "../maths";
+import { Vec3 } from "../../ui/maths";
 import { Directional, Entity } from "./events";
 
 export function calculateDirectional(

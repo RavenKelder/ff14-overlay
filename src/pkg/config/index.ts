@@ -30,14 +30,20 @@ abilityconfig.abilities.forEach((a) => {
 	};
 });
 
-const bindings: Record<string, Binding> = {};
-keybindingsconfig.segments.forEach((b) => {
-	bindings[b.ability] = {
-		ability: b.ability,
-		command: b.command,
-		segment: b.segment,
-	};
-});
+const bindings: Record<string, Record<string, Binding>> = {};
+const bindingsBySegment: Record<string, Record<number, Binding>> = {};
+
+for (let i = 0; i < Object.keys(keybindingsconfig.profiles).length; i++) {
+	const keys = Object.keys(keybindingsconfig.profiles);
+	const binding = Object.values(keybindingsconfig.profiles);
+
+	bindings[keys[i]] = {};
+	bindingsBySegment[keys[i]] = {};
+	binding[i].forEach((b) => {
+		bindings[keys[i]][b.ability] = b;
+		bindingsBySegment[keys[i]][b.segment] = b;
+	});
+}
 
 const functionKeyRegex = /F[0-9]{1,2}/g;
 

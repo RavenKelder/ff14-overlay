@@ -106,7 +106,6 @@ export default function Segment(props: BoxProps): JSX.Element {
 				if (segment !== props.segment) {
 					return;
 				}
-				console.log(`Got ability state ${JSON.stringify(state)}`);
 				if (state === null) {
 					setCooldown(0);
 					setCharges(1);

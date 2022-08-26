@@ -16,6 +16,7 @@ export enum Channel {
 	Combat = "combat",
 	AbilityChargesRequest = "ability-charges-request",
 	AbilityChargesReceive = "ability-charges-receive",
+	ChangePrimaryPlayer = "change-primary-player",
 }
 
 let startOK: (event: IpcMainEvent) => void;

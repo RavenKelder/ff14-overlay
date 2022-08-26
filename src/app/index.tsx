@@ -180,7 +180,6 @@ function App(opts: AppProps): JSX.Element {
 				console.error(`Unexpected typeof inCombat ${typeof inCombat}`);
 				return;
 			}
-
 			setInCombat(inCombat);
 		});
 
@@ -199,6 +198,8 @@ function App(opts: AppProps): JSX.Element {
 				window.electronAPI.ipcRendererSend(Channel.StartOK);
 			}, 1000),
 		);
+
+		startOverlayEvents();
 	}, []);
 
 	/**

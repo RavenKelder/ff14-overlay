@@ -1,14 +1,28 @@
 import { setupMenuStateHandler } from "./window";
-import abilityconfig from "../config";
 import { getResolution, getScreenFactor } from "./system/display";
 import { Channel, setupFileResponse, setupStartOK } from "./ipc";
-import { getExistingFiles } from "./file";
 import { forceMenuStateOpen } from "./window/keyevents";
 import { multiplyVec2 } from "./maths";
 import "./system/sound";
 import { setupPollActiveWindow } from "./system/focus";
+import { Parser } from "../parsingservice/parser";
+import config from "../config";
+import {
+	setupCooldownEvents,
+	setupCustomInCombatEvents,
+} from "../parsingservice/parserevents";
+import { setupAbilityCharges } from "../parsingservice/ipc";
+import {
+	startOverlayPluginEvents,
+	stopOverlayPluginEvents,
+} from "../parsingservice/overlayplugin";
+import { getCurrentProfile, getProfileIcons } from "./profiles";
+
+const DEFAULT_PROFILE = 0;
 
 let appReady = false;
+
+export const parser = new Parser();
 
 export async function appWhenReady(): Promise<void> {
 	return new Promise((res) => {
@@ -28,6 +42,7 @@ interface StartOptions {
 	iconLength?: number;
 	segments?: number;
 	debug?: boolean;
+	profile?: number;
 }
 
 const defaultStartOptions: Required<StartOptions> = {
@@ -37,19 +52,10 @@ const defaultStartOptions: Required<StartOptions> = {
 	iconLength: 50,
 	segments: 12,
 	debug: false,
+	profile: DEFAULT_PROFILE,
 };
 
 async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
-	const commandBinding: Record<number, string[]> = {};
-	for (const b in abilityconfig.bindings) {
-		commandBinding[abilityconfig.bindings[b].segment] =
-			abilityconfig.bindings[b].command;
-	}
-	const segmentBinding: Record<string, number> = {};
-	for (const b in abilityconfig.bindings) {
-		segmentBinding[b] = abilityconfig.bindings[b].segment;
-	}
-
 	const screenSize = await getResolution();
 	const screenFactor = await getScreenFactor();
 
@@ -63,17 +69,26 @@ async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
 	setupStartOK(startOptions, (event) => {
 		console.log("Menu window OK.");
 		forceMenuStateOpen(false);
-		getExistingFiles().then((icons) => {
-			icons.forEach((icon) => {
-				event.reply(Channel.FileReceive, icon.base64, icon.index);
+		getCurrentProfile()
+			.then(getProfileIcons)
+			.then((bindings) => {
+				bindings.forEach((b) => {
+					event.reply(Channel.FileReceive, b.iconBase64, b.segment);
+				});
 			});
-		});
 		appReady = true;
 	});
 
 	setupFileResponse();
 
 	setupPollActiveWindow();
+
+	setupAbilityCharges(parser);
+
+	await parser.start();
+
+	setupCooldownEvents(parser);
+	setupCustomInCombatEvents(parser);
 
 	await Promise.all([
 		setupMenuStateHandler({
@@ -82,14 +97,15 @@ async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
 			key: opts.menuOpenKey,
 			screenSize: multiplyVec2(screenSize, screenFactor),
 			segments: opts.segments ?? defaultStartOptions.segments,
-			binding: commandBinding,
-			sendMouseToCentre: abilityconfig.sendMouseToCentre,
+			sendMouseToCentre: config.sendMouseToCentre,
 		}),
+		startOverlayPluginEvents(),
 	]);
 }
 
 function stop(): Promise<void> {
-	return new Promise((res) => res());
+	parser.stop();
+	return stopOverlayPluginEvents();
 }
 
 export default {

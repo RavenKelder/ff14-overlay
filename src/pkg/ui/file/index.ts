@@ -11,28 +11,47 @@ export interface Icon {
 	base64: string;
 }
 
-export async function getExistingFiles(): Promise<Icon[]> {
+export async function getExistingFiles(profile = 0): Promise<Icon[]> {
 	const files = fs.readdirSync(iconsDir);
 
 	const results = files.map((filename) => {
+		const [fileProfile, index] = path.basename(filename, ".png").split("_");
+
+		if (profile.toString() !== fileProfile) {
+			return null;
+		}
 		return new Promise<Icon>((res, rej) => {
 			fs.readFile(path.join(iconsDir, filename), (err, data) => {
 				if (err !== null) {
 					rej(err);
 				} else {
-					const index = parseInt(path.basename(filename, ".png"));
 					res({
-						index: index,
-						base64: !isNaN(index) ? data.toString("base64") : "",
+						index: parseInt(index),
+						base64: !isNaN(parseInt(index))
+							? data.toString("base64")
+							: "",
 					});
 				}
 			});
 		});
 	});
 
-	return (await Promise.all(results)).filter((icon) => {
-		return icon.base64 !== "";
-	});
+	const iconsOnly: Icon[] = [];
+	(await Promise.all(results))
+		.filter((icon) => {
+			if (icon === null) {
+				return false;
+			}
+
+			return icon.base64 !== "";
+		})
+		.forEach((i) => {
+			if (i !== null && i.base64 !== "") {
+				iconsOnly.push(i);
+			}
+		});
+
+	return iconsOnly;
 }
 
 export async function getFileBase64(

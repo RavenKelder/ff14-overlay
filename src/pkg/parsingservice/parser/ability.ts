@@ -1,11 +1,12 @@
-import { Ability, Binding } from "../config";
+import { getCurrentProfileBinding } from "../../ui/profiles";
+import config from "../../config";
 import { AbilityState } from "./events";
 
 export class AbilityManager {
 	abilities: Record<string, AbilityState> = {};
-	abilitiesBySegment: Record<number, string> = {};
 
-	constructor(abilities: Ability[], bindings: Binding[]) {
+	constructor() {
+		const abilities = Object.values(config.abilities);
 		abilities.forEach((a) => {
 			this.abilities[a.name] = {
 				...a,
@@ -16,15 +17,6 @@ export class AbilityManager {
 					return d;
 				}),
 			};
-		});
-
-		bindings.forEach((b) => {
-			if (!Object.keys(this.abilities).includes(b.ability)) {
-				throw new Error(
-					`binding includes invalid ability ${b.ability} at segment ${b.segment}`,
-				);
-			}
-			this.abilitiesBySegment[b.segment] = b.ability;
 		});
 	}
 
@@ -77,16 +69,13 @@ export class AbilityManager {
 		return this.abilities[name];
 	}
 
-	getAbilityBySegment(segment: number): AbilityState | null {
-		if (
-			Object.prototype.hasOwnProperty.call(
-				this.abilitiesBySegment,
-				segment,
-			)
-		) {
-			return this.abilities[this.abilitiesBySegment[segment]];
-		} else {
-			return null;
-		}
+	async getAbilityBySegment(segment: number): Promise<AbilityState | null> {
+		return getCurrentProfileBinding({ segment }).then((binding) => {
+			if (binding === null) {
+				return null;
+			}
+
+			return this.abilities[binding.ability] ?? null;
+		});
 	}
 }

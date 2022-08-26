@@ -1,5 +1,9 @@
+import { ipcMain } from "electron";
+import { getMenuAndRun } from "../../ui/window";
+import { Channel } from "../../ui/ipc";
+import { pressKeys } from "../../ui/system/keyboard";
 import { Parser } from "../parser";
-import { CustomInCombatID } from "../parser/events";
+import { CustomInCombatID, CustomOutOfCombatID } from "../parser/events";
 
 export function setupAbilityCharges(parser: Parser) {
 	ipcMain.on(Channel.AbilityChargesRequest, (event, segment) => {
@@ -11,21 +15,8 @@ export function setupAbilityCharges(parser: Parser) {
 			);
 			return;
 		}
-		const ability = parser.getAbilityBySegment(segment);
-		event.reply(Channel.AbilityChargesReceive, segment, ability);
-	});
-}
-
-export async function setupCombatToggle(
-	parser: Parser,
-	inCombatCommand: string[],
-	outOfCombatCommand: string[],
-) {
-	parser.hooks.attach(CustomInCombatID, () => {
-		pressKeys(inCombatCommand);
-	});
-
-	parser.hooks.attach(CustomOutOfCombatID, () => {
-		pressKeys(outOfCombatCommand);
+		parser.getAbilityBySegment(segment).then((ability) => {
+			event.reply(Channel.AbilityChargesReceive, segment, ability);
+		});
 	});
 }
