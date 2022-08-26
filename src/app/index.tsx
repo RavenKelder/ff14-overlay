@@ -198,8 +198,6 @@ function App(opts: AppProps): JSX.Element {
 				window.electronAPI.ipcRendererSend(Channel.StartOK);
 			}, 1000),
 		);
-
-		startOverlayEvents();
 	}, []);
 
 	/**
