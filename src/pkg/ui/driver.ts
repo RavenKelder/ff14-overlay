@@ -4,25 +4,23 @@ import { Channel, setupFileResponse, setupStartOK } from "./ipc";
 import { forceMenuStateOpen } from "./window/keyevents";
 import { multiplyVec2 } from "./maths";
 import "./system/sound";
-import { setupPollActiveWindow } from "./system/focus";
 import { Parser } from "../parsingservice/parser";
 import config from "../config";
 import {
 	setupCooldownEvents,
 	setupCustomInCombatEvents,
+	setupPlayerStatsEvents,
 } from "../parsingservice/parserevents";
 import { setupAbilityCharges } from "../parsingservice/ipc";
-import {
-	startOverlayPluginEvents,
-	stopOverlayPluginEvents,
-} from "../parsingservice/overlayplugin";
+import { OverlayPlugin } from "../parsingservice/overlayplugin";
 import { getCurrentProfile, getProfileIcons } from "./profiles";
 
 const DEFAULT_PROFILE = 0;
 
 let appReady = false;
 
-export const parser = new Parser();
+const overlayPlugin = new OverlayPlugin();
+export const parser = new Parser(overlayPlugin);
 
 export async function appWhenReady(): Promise<void> {
 	return new Promise((res) => {
@@ -81,14 +79,13 @@ async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
 
 	setupFileResponse();
 
-	setupPollActiveWindow();
-
 	setupAbilityCharges(parser);
 
 	await parser.start();
 
 	setupCooldownEvents(parser);
 	setupCustomInCombatEvents(parser);
+	setupPlayerStatsEvents(parser);
 
 	await Promise.all([
 		setupMenuStateHandler({
@@ -99,13 +96,13 @@ async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
 			segments: opts.segments ?? defaultStartOptions.segments,
 			sendMouseToCentre: config.sendMouseToCentre,
 		}),
-		startOverlayPluginEvents(),
 	]);
 }
 
-function stop(): Promise<void> {
+async function stop(): Promise<void> {
 	parser.stop();
-	return stopOverlayPluginEvents();
+	overlayPlugin.stop();
+	return;
 }
 
 export default {

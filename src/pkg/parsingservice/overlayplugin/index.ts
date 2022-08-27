@@ -1,76 +1,94 @@
+import { Hook, HookManager } from "../../ui/hooks";
 import WebSocket from "ws";
 const OVERLAY_PLUGIN_URL = "ws://localhost:10501/ws";
 
-const client = new WebSocket(OVERLAY_PLUGIN_URL);
-let started = false;
+export class OverlayPlugin {
+	url: string;
+	client: WebSocket | null = null;
+	hooks: HookManager<unknown>;
+	constructor(url = OVERLAY_PLUGIN_URL) {
+		this.url = url;
+		this.hooks = new HookManager();
+	}
 
-const hooks: Record<string, ((message: unknown) => void)[]> = {};
-
-client.on("connectFailed", function (error) {
-	console.log("Connect Error: " + error.toString());
-});
-const clientReady = new Promise<void>((res, rej) => {
-	client.on("open", function () {
-		console.log("WebSocket Client Connected");
-		client.on("error", function (error: Error) {
-			console.log("Connection Error: " + error.toString());
-			rej(error);
-		});
-		client.on("close", function () {
-			console.log("WebSocket Client Connection Closed");
-		});
-		client.on("message", function (message: unknown) {
-			if (Buffer.isBuffer(message)) {
-				const m: { type: string } = JSON.parse(message.toString());
-				if (m.type && hooks[m.type] !== undefined) {
-					hooks[m.type].forEach((h) => {
-						h(m);
-					});
+	start() {
+		const connect = () => {
+			this.client = new WebSocket(this.url);
+			this.client.on("open", () => {
+				console.log("(OverlayPlugin.start) client open");
+				if (this.client === null) {
+					throw new Error(
+						"(OverlayPlugin.start) client unexpectedly null",
+					);
 				}
-			} else {
-				console.log(`unexpected typeof message ${typeof message}`);
-			}
-		});
-		res();
-	});
-});
 
-export function addOverlayPluginHook(
-	event: string,
-	callback: (message: unknown) => void,
-) {
-	if (started) {
-		console.warn(
-			`Warning: OverlayPlugin socket has already started. Some events may have been missed.`,
-		);
+				this.client.on("message", (message: unknown) => {
+					if (Buffer.isBuffer(message)) {
+						const m: { type: string } = JSON.parse(
+							message.toString(),
+						);
+						if (m.type) {
+							this.hooks.run(m.type, m);
+						}
+					} else {
+						console.log(
+							`unexpected typeof message ${typeof message}`,
+						);
+					}
+				});
+
+				this.client.send(
+					JSON.stringify({
+						call: "subscribe",
+						events: [
+							"CombatData",
+							"ChangePrimaryPlayer",
+							"LogLine",
+						],
+					}),
+					(err) => {
+						if (err) {
+							console.log(
+								`(OverlayPlugin.start) Failed sending subscribe message: ${err.message}`,
+							);
+						} else {
+							console.log(
+								"(OverlayPlugin.start) Started listening to OverlayPlugin",
+							);
+						}
+					},
+				);
+			});
+			this.client.on("error", (err) => {
+				console.log(
+					"(OverlayPlugin.start) client error:",
+					err.toString(),
+				);
+			});
+			this.client.on("close", () => {
+				console.log(
+					"(OverlayPlugin.start) client closing. Retrying...",
+				);
+				setTimeout(() => {
+					connect();
+				}, 500);
+			});
+		};
+
+		connect();
 	}
-	if (hooks[event] !== undefined) {
-		hooks[event].push(callback);
-	} else {
-		hooks[event] = [callback];
+
+	stop() {
+		if (this.client !== null) {
+			this.client.close();
+		}
 	}
-}
 
-export async function startOverlayPluginEvents(): Promise<void> {
-	await clientReady;
-	started = true;
-	client.send(
-		JSON.stringify({
-			call: "subscribe",
-			events: ["CombatData", "ChangePrimaryPlayer", "LogLine"],
-		}),
-		(err) => {
-			if (err) {
-				console.log(`Websocket Client error: ${err}`);
-			} else {
-				console.log("Started listening to OverlayPlugin");
-			}
-		},
-	);
-}
+	attachHook(event: string, h: Hook<unknown>): string {
+		return this.hooks.attach(event, h);
+	}
 
-export async function stopOverlayPluginEvents(): Promise<void> {
-	await clientReady;
-	started = false;
-	client.close();
+	detachHook(event: string, id: string): boolean {
+		return this.hooks.detach(event, id);
+	}
 }

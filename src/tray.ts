@@ -30,8 +30,8 @@ export async function createTray(opts: CreateTrayOptions) {
 					getProfile(p.name)
 						.then(getProfileIcons)
 						.then((bindings) => {
-							getMenuAndRun(async (menu) => {
-								restartMenu().then(() => {
+							restartMenu().then(() => {
+								getMenuAndRun(async (menu) => {
 									bindings.forEach((b) => {
 										menu.webContents.send(
 											Channel.FileReceive,

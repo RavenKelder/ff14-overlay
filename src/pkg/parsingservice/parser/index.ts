@@ -17,10 +17,11 @@ import {
 	CustomCombatStatusID,
 	CombatStatusRaw,
 	CustomCombatStatus,
+	PlayerStatsID,
+	PlayerStats,
 } from "./events";
 import { Hook, HookManager } from "../../ui/hooks";
 import { AbilityManager } from "./ability";
-import { addOverlayPluginHook } from "../overlayplugin";
 
 interface State {
 	primaryPlayer: string;
@@ -29,11 +30,19 @@ interface State {
 	abilityManager: AbilityManager;
 }
 
+interface Emitter {
+	start(): Promise<void> | void;
+	stop(): Promise<void> | void;
+	attachHook(event: string, hook: Hook<unknown>): string;
+	detachHook(event: string, id: string): boolean;
+}
+
 export class Parser {
 	hooks: HookManager<ParseEvent>;
 	state: State;
+	emitter: Emitter;
 
-	constructor() {
+	constructor(emitter: Emitter) {
 		this.hooks = new HookManager();
 		this.state = {
 			primaryPlayer: "",
@@ -41,11 +50,12 @@ export class Parser {
 			inCombat: false,
 			abilityManager: new AbilityManager(),
 		};
+		this.emitter = emitter;
 		this.setupCustomEvents();
 	}
 
 	async start(): Promise<void> {
-		addOverlayPluginHook("ChangePrimaryPlayer", (m) => {
+		this.emitter.attachHook("ChangePrimaryPlayer", (m) => {
 			const message = m as {
 				charID: number;
 				charName: string;
@@ -57,7 +67,7 @@ export class Parser {
 			console.log(`Changing player to ${playerName}`);
 		});
 
-		addOverlayPluginHook("LogLine", (m) => {
+		this.emitter.attachHook("LogLine", (m) => {
 			const message = m as {
 				rawLine: string;
 			};
@@ -72,7 +82,7 @@ export class Parser {
 			}
 		});
 
-		addOverlayPluginHook("CombatData", (m) => {
+		this.emitter.attachHook("CombatData", (m) => {
 			const message = m as CombatStatusRaw;
 
 			this.hooks.run(
@@ -80,7 +90,10 @@ export class Parser {
 				new CustomCombatStatus(message),
 			);
 
-			if (message.isActive === "true") {
+			if (
+				message.isActive === "true" &&
+				Object.keys(message.Combatant).includes("YOU")
+			) {
 				if (!this.state.inCombat) {
 					this.hooks.run(CustomInCombatID, new CustomInCombat(""));
 				}
@@ -92,10 +105,12 @@ export class Parser {
 				this.state.inCombat = false;
 			}
 		});
+
+		this.emitter.start();
 	}
 
-	stop() {
-		return;
+	stop(): Promise<void> {
+		return Promise.resolve(this.emitter.stop());
 	}
 
 	parse(line: string): ParseEvent {
@@ -106,6 +121,8 @@ export class Parser {
 				return new NetworkAbility(line);
 			case ChangePrimaryPlayerID:
 				return new ChangePrimaryPlayer(line);
+			case PlayerStatsID:
+				return new PlayerStats(line);
 		}
 
 		return new ParseEvent(line);

@@ -14,6 +14,7 @@ export function setupPollActiveWindow() {
 	if (process.env.DEBUG) {
 		return;
 	}
+
 	timer = setInterval(() => {
 		getActiveWindow().then((w) => {
 			w.title.then((t) => {

@@ -19,6 +19,7 @@ interface BindingData extends Binding {
 }
 
 interface Profile {
+	jobID?: string;
 	name: string;
 	bindings: Binding[];
 }
@@ -214,9 +215,28 @@ export async function getProfile(profile: string): Promise<Profile> {
 		};
 	});
 	return {
+		...p,
 		bindings: bindings,
 		name: profile,
 	};
+}
+
+export async function getProfileByJobID(
+	jobID: string,
+): Promise<Profile | null> {
+	if (jobID === currentProfile?.jobID) {
+		return currentProfile;
+	}
+
+	const profiles = await getProfiles();
+
+	for (let i = 0; i < profiles.length; i++) {
+		if (profiles[i].jobID === jobID) {
+			return profiles[i];
+		}
+	}
+
+	return null;
 }
 
 export function getProfileIcons(profile: Profile): Promise<BindingData[]> {

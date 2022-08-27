@@ -219,3 +219,13 @@ export class CustomCombatStatus extends ParseEvent {
 		};
 	}
 }
+
+export class PlayerStats extends ParseEvent {
+	jobID: string;
+
+	constructor(line: string) {
+		super(line);
+
+		this.jobID = this.rawValues[2];
+	}
+}
