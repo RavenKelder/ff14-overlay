@@ -5,7 +5,8 @@ import { pressKeys, setupListener } from "../system/keyboard";
 import { Channel } from "../ipc";
 import { Vec2 } from "../maths";
 import { sendMouseTo } from "../system/mouse";
-import { getCurrentProfileBinding } from "../profiles";
+import { ProfilesConfig } from "../profiles";
+import { mapKeyToInt } from "./map";
 
 const MENU_EVENT_POLL_RATE = 5;
 
@@ -37,6 +38,7 @@ interface SetupMenuStateHandlerOptions {
 	escapeRadius: number;
 	segments: number;
 	screenSize: Vec2;
+	profilesConfig: ProfilesConfig;
 }
 interface MenuState {
 	open: boolean;
@@ -50,22 +52,16 @@ export function forceMenuStateOpen(open: boolean) {
 	menuState.open = open;
 }
 
-let currentMenuStateHandlerTimer: NodeJS.Timer;
-
 export async function setupMenuStateHandler(
 	opts: SetupMenuStateHandlerOptions,
 ) {
-	if (currentMenuStateHandlerTimer) {
-		clearInterval(currentMenuStateHandlerTimer);
-	}
-
 	const centre: Vec2 = {
 		x: opts.screenSize.x / 2,
 		y: opts.screenSize.y / 2,
 	};
 
 	setupListener(
-		121,
+		mapKeyToInt(opts.key),
 		(event) => {
 			const menu = mustGetMenu();
 			if (menu === null) {
@@ -80,17 +76,19 @@ export async function setupMenuStateHandler(
 					).then((result) => {
 						menu.webContents.send(Channel.MenuClose, result ?? -1);
 						if (result !== null) {
-							getCurrentProfileBinding({
-								segment: result,
-							}).then((binding) => {
-								if (binding === null) {
-									console.warn(
-										`Empty binding for segment ${result}`,
-									);
-								} else {
-									pressKeys(binding.command);
-								}
-							});
+							opts.profilesConfig
+								.getCurrentProfileBinding({
+									segment: result,
+								})
+								.then((binding) => {
+									if (binding === null) {
+										console.warn(
+											`Empty binding for segment ${result}`,
+										);
+									} else {
+										pressKeys(binding.command);
+									}
+								});
 						}
 					});
 				}

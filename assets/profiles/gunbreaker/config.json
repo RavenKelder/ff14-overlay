@@ -1,65 +1,126 @@
 {
-	"jobID": "37",
 	"bindings": [
 		{
 			"segment": 0,
-			"command": ["control", "shift", "4"],
-			"ability": "Heart of Light"
+			"command": [
+				"control",
+				"shift",
+				"4"
+			],
+			"ability": "Heart of Light",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\gunbreaker\\0.png"
 		},
 		{
 			"segment": 1,
-			"command": ["control", "shift", "5"],
-			"ability": "Camouflage"
+			"command": [
+				"control",
+				"shift",
+				"5"
+			],
+			"ability": "Camouflage",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\gunbreaker\\1.png"
 		},
 		{
 			"segment": 2,
-			"command": ["control", "shift", "6"],
-			"ability": "Superbolide"
+			"command": [
+				"control",
+				"shift",
+				"6"
+			],
+			"ability": "Superbolide",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\gunbreaker\\2.png"
 		},
 		{
 			"segment": 3,
-			"command": ["control", "shift", "7"],
-			"ability": "Shirk"
+			"command": [
+				"control",
+				"shift",
+				"7"
+			],
+			"ability": "Shirk",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\gunbreaker\\3.png"
 		},
 		{
 			"segment": 4,
-			"command": ["control", "shift", "8"],
-			"ability": "Arm's Length"
+			"command": [
+				"control",
+				"shift",
+				"8"
+			],
+			"ability": "Arm's Length",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\gunbreaker\\4.png"
 		},
 		{
 			"segment": 5,
-			"command": ["control", "shift", "9"],
-			"ability": "Heart of Stone"
+			"command": [
+				"control",
+				"shift",
+				"9"
+			],
+			"ability": "Heart of Stone",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\gunbreaker\\5.png"
 		},
 		{
 			"segment": 6,
-			"command": ["control", "shift", "\\"],
-			"ability": "Reprisal"
+			"command": [
+				"control",
+				"shift",
+				"\\"
+			],
+			"ability": "Reprisal",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\gunbreaker\\6.png"
 		},
 		{
 			"segment": 7,
-			"command": ["control", "shift", "-"],
-			"ability": "Rampart"
+			"command": [
+				"control",
+				"shift",
+				"-"
+			],
+			"ability": "Rampart",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\gunbreaker\\7.png"
 		},
 		{
 			"segment": 8,
-			"command": ["control", "shift", "="],
-			"ability": "Nebula"
+			"command": [
+				"control",
+				"shift",
+				"="
+			],
+			"ability": "Nebula",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\gunbreaker\\8.png"
 		},
 		{
 			"segment": 9,
-			"command": ["control", "shift", "1"],
-			"ability": "Provoke"
+			"command": [
+				"control",
+				"shift",
+				"1"
+			],
+			"ability": "Provoke",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\gunbreaker\\9.png"
 		},
 		{
 			"segment": 10,
-			"command": ["control", "shift", "2"],
-			"ability": "Bloodfest"
+			"command": [
+				"control",
+				"shift",
+				"2"
+			],
+			"ability": "Bloodfest",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\gunbreaker\\10.png"
 		},
 		{
 			"segment": 11,
-			"command": ["control", "shift", "3"],
-			"ability": "Aurora"
+			"command": [
+				"control",
+				"shift",
+				"3"
+			],
+			"ability": "Aurora",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\gunbreaker\\11.png"
 		}
-	]
+	],
+	"name": "gunbreaker",
+	"jobID": "37"
 }

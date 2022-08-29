@@ -1,23 +1,17 @@
-import { app, BrowserWindow } from "electron";
+import { app } from "electron";
 
 import "./pkg/ui/system/keyboard";
 import driver from "./pkg/ui/driver";
-import { createMenu, setupToggleInteractive } from "./pkg/ui/window";
+import { setupToggleInteractive } from "./pkg/ui/window";
 import config from "./pkg/config";
-import { createTray } from "./tray";
-import { profileReady } from "./pkg/ui/profiles";
 
 const DEBUG = process.env.DEBUG ? true : false;
 
 function main() {
-	const driverReady = driver
-		.start({
-			menuOpenKey: config.uiBindings.openMenu,
-			debug: DEBUG,
-		})
-		.catch((err) => {
-			console.error(`failed starting driver: ${err}`);
-		});
+	const driverReady = driver.start({ debug: DEBUG }).catch((err) => {
+		console.error(`failed starting driver: ${err}`);
+		app.quit();
+	});
 
 	// Handle creating/removing shortcuts on Windows when installing/uninstalling.
 	if (require("electron-squirrel-startup")) {
@@ -30,38 +24,22 @@ function main() {
 	// Some APIs can only be used after this event occurs.
 	app.on("ready", async () => {
 		try {
-			await profileReady;
 			await driverReady;
-			await createMenu({ debug: DEBUG });
-			await createTray({ icon: "assets/tray.png" });
-			const ok = await setupToggleInteractive(
-				config.uiBindings.toggleInteractiveUI,
-				DEBUG,
-			);
-			if (!ok) {
-				console.error(`Toggle interactive setup failed.`);
-			}
 		} catch (err) {
 			console.error(`Failed starting app: ${err}`);
 			app.quit();
 		}
 	});
 
-	// Quit when all windows are closed, except on macOS. There, it's common
-	// for applications and their menu bar to stay active until the user quits
-	// explicitly with Cmd + Q.
 	app.on("window-all-closed", async () => {
-		if (process.platform !== "darwin") {
-			close();
-		}
+		close();
 	});
+}
 
-	app.on("activate", () => {
-		// On OS X it's common to re-create a window in the app when the
-		// dock icon is clicked and there are no other windows open.
-		if (BrowserWindow.getAllWindows().length === 0) {
-			createMenu({ debug: DEBUG });
-		}
+function close() {
+	driver.stop().catch((err) => {
+		console.error(err);
+		app.quit();
 	});
 }
 

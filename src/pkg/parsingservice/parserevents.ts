@@ -1,4 +1,4 @@
-import { getMenuAndRun, restartMenu } from "../ui/window";
+import { getMenuAndRun } from "../ui/window";
 import { Channel } from "../ui/ipc";
 import { Parser } from "./parser";
 import {
@@ -11,42 +11,40 @@ import {
 } from "./parser/events";
 import { play } from "../ui/system/sound";
 import "./overlayplugin";
-import {
-	getCurrentProfile,
-	getCurrentProfileBinding,
-	getProfile,
-	getProfileByJobID,
-	getProfileIcons,
-	setCurrentProfile,
-} from "../ui/profiles";
+import { ProfilesConfig } from "../ui/profiles";
 
 const WARNING_ABILITIES = ["Battle Litany", "Lance Charge", "Nastrond"];
 
-export function setupCooldownEvents(parser: Parser) {
+export function setupCooldownEvents(
+	parser: Parser,
+	profilesConfig: ProfilesConfig,
+) {
 	const cooldownEventHandler = (event: unknown) => {
 		if (!(event instanceof CustomOnCooldown)) {
 			return;
 		}
-		getCurrentProfileBinding({
-			ability: event.ability.name,
-		}).then((binding) => {
-			if (binding === null) {
-				return;
-			}
-			if (WARNING_ABILITIES.includes(event.ability.name)) {
-				setTimeout(() => {
-					play("warn");
-				}, event.ability.cooldown * 1000);
-			}
+		profilesConfig
+			.getCurrentProfileBinding({
+				ability: event.ability.name,
+			})
+			.then((binding) => {
+				if (binding === null) {
+					return;
+				}
+				if (WARNING_ABILITIES.includes(event.ability.name)) {
+					setTimeout(() => {
+						play("warn");
+					}, event.ability.cooldown * 1000);
+				}
 
-			getMenuAndRun(async (w) => {
-				w.webContents.send(
-					Channel.SegmentCooldown,
-					binding.segment,
-					event.ability,
-				);
+				getMenuAndRun(async (w) => {
+					w.webContents.send(
+						Channel.SegmentCooldown,
+						binding.segment,
+						event.ability,
+					);
+				});
 			});
-		});
 	};
 	parser.hooks.attach(CustomOnCooldownID, cooldownEventHandler);
 }
@@ -57,49 +55,32 @@ export function setupCustomInCombatEvents(parser: Parser) {
 			return;
 		}
 		getMenuAndRun(async (w) => {
-			w.webContents.send(
-				Channel.Combat,
-				event.status.isActive &&
-					Object.keys(event.status.combatant).includes("YOU"),
-			);
+			w.webContents.send(Channel.Combat, event.inCombat);
 		});
 	});
 }
 
-export function setupPlayerStatsEvents(parser: Parser) {
+export function setupPlayerStatsEvents(
+	parser: Parser,
+	profilesConfig: ProfilesConfig,
+) {
 	parser.hooks.attach(PlayerStatsID, (event) => {
 		if (!(event instanceof PlayerStats)) {
 			return;
 		}
 
-		getProfileByJobID(event.jobID).then((p) => {
+		(async () => {
+			const p = await profilesConfig.getProfileByJobID(event.jobID);
 			if (p === null) {
 				return;
 			}
 
-			getCurrentProfile().then((currentP) => {
-				if (currentP.name === p.name) {
-					return;
-				}
+			const currentP = await profilesConfig.getCurrentProfile();
+			if (currentP.name === p.name) {
+				return;
+			}
 
-				setCurrentProfile(p.name).then(() => {
-					getProfile(p.name)
-						.then(getProfileIcons)
-						.then((bindings) => {
-							restartMenu().then(() => {
-								getMenuAndRun(async (menu) => {
-									bindings.forEach((b) => {
-										menu.webContents.send(
-											Channel.FileReceive,
-											b.iconBase64,
-											b.segment,
-										);
-									});
-								});
-							});
-						});
-				});
-			});
-		});
+			await profilesConfig.setCurrentProfile(p.name);
+		})();
 	});
 }

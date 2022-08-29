@@ -42,13 +42,13 @@ export class Parser {
 	state: State;
 	emitter: Emitter;
 
-	constructor(emitter: Emitter) {
+	constructor(emitter: Emitter, abilityManager: AbilityManager) {
 		this.hooks = new HookManager();
 		this.state = {
 			primaryPlayer: "",
 			primaryPlayerID: "",
 			inCombat: false,
-			abilityManager: new AbilityManager(),
+			abilityManager: abilityManager,
 		};
 		this.emitter = emitter;
 		this.setupCustomEvents();

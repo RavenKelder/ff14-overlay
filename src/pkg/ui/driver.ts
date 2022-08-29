@@ -1,11 +1,14 @@
-import { setupMenuStateHandler } from "./window";
+import {
+	createMenu,
+	setupMenuStateHandler,
+	setupProfileSwapEvent,
+} from "./window";
 import { getResolution, getScreenFactor } from "./system/display";
 import { Channel, setupFileResponse, setupStartOK } from "./ipc";
 import { forceMenuStateOpen } from "./window/keyevents";
 import { multiplyVec2 } from "./maths";
 import "./system/sound";
 import { Parser } from "../parsingservice/parser";
-import config from "../config";
 import {
 	setupCooldownEvents,
 	setupCustomInCombatEvents,
@@ -13,14 +16,19 @@ import {
 } from "../parsingservice/parserevents";
 import { setupAbilityCharges } from "../parsingservice/ipc";
 import { OverlayPlugin } from "../parsingservice/overlayplugin";
-import { getCurrentProfile, getProfileIcons } from "./profiles";
+import { ProfilesConfig } from "./profiles";
+import { closeTray, createTray } from "./window/tray";
+import { AbilityManager } from "../parsingservice/parser/ability";
+import { app } from "electron";
 
-const DEFAULT_PROFILE = 0;
+const DEFAULT_PROFILE_DIR = "assets/profiles";
+const DEFAULT_ICON = "assets/tray.png";
 
 let appReady = false;
 
 const overlayPlugin = new OverlayPlugin();
-export const parser = new Parser(overlayPlugin);
+let profilesConfig: ProfilesConfig | null = null;
+let parser: Parser | null = null;
 
 export async function appWhenReady(): Promise<void> {
 	return new Promise((res) => {
@@ -34,23 +42,23 @@ export async function appWhenReady(): Promise<void> {
 }
 
 interface StartOptions {
-	menuOpenKey: string;
 	menuEscapeRadius?: number;
 	menuDiameter?: number;
 	iconLength?: number;
 	segments?: number;
 	debug?: boolean;
-	profile?: number;
+	profilesDir?: string;
+	iconFile?: string;
 }
 
 const defaultStartOptions: Required<StartOptions> = {
-	menuOpenKey: "VK_F10",
 	menuEscapeRadius: 150,
 	menuDiameter: 400,
 	iconLength: 50,
 	segments: 12,
 	debug: false,
-	profile: DEFAULT_PROFILE,
+	profilesDir: DEFAULT_PROFILE_DIR,
+	iconFile: DEFAULT_ICON,
 };
 
 async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
@@ -64,11 +72,27 @@ async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
 		screenHeight: screenSize.y,
 	};
 
+	profilesConfig = new ProfilesConfig(startOptions.profilesDir);
+	parser = new Parser(overlayPlugin, new AbilityManager(profilesConfig));
+
+	const configValue = await profilesConfig.getConfig();
+
+	await profilesConfig.setup();
+
 	setupStartOK(startOptions, (event) => {
 		console.log("Menu window OK.");
 		forceMenuStateOpen(false);
-		getCurrentProfile()
-			.then(getProfileIcons)
+		if (profilesConfig === null) {
+			throw new Error("profilesConfig unexpectedly null");
+		}
+		profilesConfig
+			.getCurrentProfile()
+			.then((p) => {
+				if (profilesConfig === null) {
+					throw new Error("profilesConfig is unexpectedly null");
+				}
+				return profilesConfig.getProfileIcons(p.name);
+			})
 			.then((bindings) => {
 				bindings.forEach((b) => {
 					event.reply(Channel.FileReceive, b.iconBase64, b.segment);
@@ -77,31 +101,41 @@ async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
 		appReady = true;
 	});
 
+	setupProfileSwapEvent(profilesConfig);
 	setupFileResponse();
 
 	setupAbilityCharges(parser);
-
-	await parser.start();
-
-	setupCooldownEvents(parser);
+	setupCooldownEvents(parser, profilesConfig);
 	setupCustomInCombatEvents(parser);
-	setupPlayerStatsEvents(parser);
+	setupPlayerStatsEvents(parser, profilesConfig);
 
 	await Promise.all([
 		setupMenuStateHandler({
 			escapeRadius:
 				opts.menuEscapeRadius ?? defaultStartOptions.menuEscapeRadius,
-			key: opts.menuOpenKey,
+			key: configValue.openMenu,
 			screenSize: multiplyVec2(screenSize, screenFactor),
 			segments: opts.segments ?? defaultStartOptions.segments,
-			sendMouseToCentre: config.sendMouseToCentre,
+			sendMouseToCentre: configValue.sendMouseToCentre,
+			profilesConfig: profilesConfig,
+		}),
+		parser.start(),
+		createMenu({ debug: opts.debug }),
+		createTray({
+			icon: startOptions.iconFile,
+			profilesConfig: profilesConfig,
+			close: stop,
 		}),
 	]);
 }
 
 async function stop(): Promise<void> {
-	parser.stop();
+	if (parser) {
+		await parser.stop();
+	}
 	overlayPlugin.stop();
+	closeTray();
+	app.quit();
 	return;
 }
 

@@ -208,6 +208,7 @@ export interface CombatStatus {
 
 export class CustomCombatStatus extends ParseEvent {
 	status: CombatStatus;
+	inCombat: boolean;
 
 	constructor(message: CombatStatusRaw) {
 		super("");
@@ -217,6 +218,9 @@ export class CustomCombatStatus extends ParseEvent {
 			combatant: message.Combatant,
 			isActive: message.isActive === "true",
 		};
+		this.inCombat =
+			Object.keys(this.status.combatant).includes("YOU") &&
+			this.status.isActive;
 	}
 }
 

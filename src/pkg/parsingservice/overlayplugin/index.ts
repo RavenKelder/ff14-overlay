@@ -6,6 +6,7 @@ export class OverlayPlugin {
 	url: string;
 	client: WebSocket | null = null;
 	hooks: HookManager<unknown>;
+	closed = false;
 	constructor(url = OVERLAY_PLUGIN_URL) {
 		this.url = url;
 		this.hooks = new HookManager();
@@ -66,6 +67,9 @@ export class OverlayPlugin {
 				);
 			});
 			this.client.on("close", () => {
+				if (this.closed) {
+					return;
+				}
 				console.log(
 					"(OverlayPlugin.start) client closing. Retrying...",
 				);
@@ -79,6 +83,7 @@ export class OverlayPlugin {
 	}
 
 	stop() {
+		this.closed = true;
 		if (this.client !== null) {
 			this.client.close();
 		}

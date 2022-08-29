@@ -1,70 +1,136 @@
 {
-	"jobID": "22",
 	"bindings": [
 		{
 			"segment": 0,
-			"command": ["control", "shift", "4"],
-			"ability": "Geirskogul"
+			"command": [
+				"control",
+				"shift",
+				"4"
+			],
+			"ability": "Geirskogul",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\dragoon\\0.png"
 		},
 		{
 			"segment": 0,
-			"command": ["control", "shift", "4"],
-			"ability": "Nastrond"
+			"command": [
+				"control",
+				"shift",
+				"4"
+			],
+			"ability": "Nastrond",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\dragoon\\0.png"
 		},
 		{
 			"segment": 1,
-			"command": ["control", "shift", "5"],
-			"ability": "Stardiver"
+			"command": [
+				"control",
+				"shift",
+				"5"
+			],
+			"ability": "Stardiver",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\dragoon\\1.png"
 		},
 		{
 			"segment": 2,
-			"command": ["control", "shift", "6"],
-			"ability": "True North"
+			"command": [
+				"control",
+				"shift",
+				"6"
+			],
+			"ability": "True North",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\dragoon\\2.png"
 		},
 		{
 			"segment": 3,
-			"command": ["control", "shift", "7"],
-			"ability": "Elusive Jump"
+			"command": [
+				"control",
+				"shift",
+				"7"
+			],
+			"ability": "Elusive Jump",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\dragoon\\3.png"
 		},
 		{
 			"segment": 4,
-			"command": ["control", "shift", "8"],
-			"ability": "Arm's Length"
+			"command": [
+				"control",
+				"shift",
+				"8"
+			],
+			"ability": "Arm's Length",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\dragoon\\4.png"
 		},
 		{
 			"segment": 5,
-			"command": ["control", "shift", "9"],
-			"ability": "Feint"
+			"command": [
+				"control",
+				"shift",
+				"9"
+			],
+			"ability": "Feint",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\dragoon\\5.png"
 		},
 		{
 			"segment": 6,
-			"command": ["control", "shift", "\\"],
-			"ability": "Life Surge"
+			"command": [
+				"control",
+				"shift",
+				"\\"
+			],
+			"ability": "Life Surge",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\dragoon\\6.png"
 		},
 		{
 			"segment": 7,
-			"command": ["control", "shift", "-"],
-			"ability": "Bloodbath"
+			"command": [
+				"control",
+				"shift",
+				"-"
+			],
+			"ability": "Bloodbath",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\dragoon\\7.png"
 		},
 		{
 			"segment": 8,
-			"command": ["control", "shift", "="],
-			"ability": "Second Wind"
+			"command": [
+				"control",
+				"shift",
+				"="
+			],
+			"ability": "Second Wind",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\dragoon\\8.png"
 		},
 		{
 			"segment": 9,
-			"command": ["control", "shift", "1"],
-			"ability": "Lance Charge"
+			"command": [
+				"control",
+				"shift",
+				"1"
+			],
+			"ability": "Lance Charge",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\dragoon\\9.png"
 		},
 		{
 			"segment": 10,
-			"command": ["control", "shift", "2"],
-			"ability": "Battle Litany"
+			"command": [
+				"control",
+				"shift",
+				"2"
+			],
+			"ability": "Battle Litany",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\dragoon\\10.png"
 		},
 		{
 			"segment": 11,
-			"command": ["control", "shift", "3"],
-			"ability": "Dragon Sight"
+			"command": [
+				"control",
+				"shift",
+				"3"
+			],
+			"ability": "Dragon Sight",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\dragoon\\11.png"
 		}
-	]
+	],
+	"name": "dragoon",
+	"jobID": "22"
 }

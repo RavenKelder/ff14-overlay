@@ -1,9 +1,0 @@
-{
-	"sendMouseToCentre": true,
-	"openMenu": "F10",
-	"toggleInteractiveUI": "F5",
-	"restartUI": "F8",
-	"closeUI": "F6",
-	"openGameUI": [],
-	"closeGameUI": []
-}

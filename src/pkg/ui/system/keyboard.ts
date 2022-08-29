@@ -1,9 +1,6 @@
-import { ipcMain } from "electron";
 import { keyboard, Key } from "@nut-tree/nut-js";
 import { Library } from "ffi-napi";
 import { DllFuncsModel, SHORT, INT } from "win32-def";
-
-import { getCurrentProfileBinding } from "../profiles";
 
 export interface Win32Fns extends DllFuncsModel {
 	GetKeyState(nVirtKey: INT): SHORT;
@@ -16,15 +13,6 @@ export const user32: Win32Fns = Library("user32.dll", {
 });
 
 keyboard.config.autoDelayMs = 5;
-
-ipcMain.on("segment-select", (event, segment: number) => {
-	getCurrentProfileBinding({ segment }).then((binding) => {
-		if (binding === null) {
-			return;
-		}
-		pressKeys(binding.command);
-	});
-});
 
 export async function pressKeys(keys: string[]) {
 	const nonNullPresses: Key[] = [];

@@ -1,11 +1,13 @@
-import { getCurrentProfileBinding } from "../../ui/profiles";
+import { ProfilesConfig } from "../../ui/profiles";
 import config from "../../config";
 import { AbilityState } from "./events";
 
 export class AbilityManager {
+	profilesConfig: ProfilesConfig;
 	abilities: Record<string, AbilityState> = {};
 
-	constructor() {
+	constructor(profilesConfig: ProfilesConfig) {
+		this.profilesConfig = profilesConfig;
 		const abilities = Object.values(config.abilities);
 		abilities.forEach((a) => {
 			this.abilities[a.name] = {
@@ -70,12 +72,14 @@ export class AbilityManager {
 	}
 
 	async getAbilityBySegment(segment: number): Promise<AbilityState | null> {
-		return getCurrentProfileBinding({ segment }).then((binding) => {
-			if (binding === null) {
-				return null;
-			}
+		return this.profilesConfig
+			.getCurrentProfileBinding({ segment })
+			.then((binding) => {
+				if (binding === null) {
+					return null;
+				}
 
-			return this.abilities[binding.ability] ?? null;
-		});
+				return this.abilities[binding.ability] ?? null;
+			});
 	}
 }
