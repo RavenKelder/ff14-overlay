@@ -13,6 +13,7 @@ export enum Channel {
 	AbilityChargesRequest = "ability-charges-request",
 	AbilityChargesReceive = "ability-charges-receive",
 	ChangePrimaryPlayer = "change-primary-player",
+	PrimaryPlayerStatus = "primary-player-status",
 }
 
 export interface Ability {

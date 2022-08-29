@@ -24,6 +24,7 @@ export class OverlayPlugin {
 				}
 
 				this.client.on("message", (message: unknown) => {
+					console.log((message as Buffer).toString());
 					if (Buffer.isBuffer(message)) {
 						const m: { type: string } = JSON.parse(
 							message.toString(),

@@ -6,6 +6,8 @@ import {
 	CustomCombatStatusID,
 	CustomOnCooldown,
 	CustomOnCooldownID,
+	CustomPrimaryPlayerEntityStatus,
+	CustomPrimaryPlayerEntityStatusID,
 	PlayerStats,
 	PlayerStatsID,
 } from "./parser/events";
@@ -82,5 +84,28 @@ export function setupPlayerStatsEvents(
 
 			await profilesConfig.setCurrentProfile(p.name);
 		})();
+	});
+}
+
+export function setupCustomPrimaryPlayerEntityStatusEvents(parser: Parser) {
+	let latest = new Date(0);
+	parser.hooks.attach(CustomPrimaryPlayerEntityStatusID, (e) => {
+		if (!(e instanceof CustomPrimaryPlayerEntityStatus)) {
+			return;
+		}
+
+		if (latest.getTime() >= e.timestamp.getTime()) {
+			return;
+		}
+
+		latest = e.timestamp;
+
+		getMenuAndRun(async (menu) => {
+			menu.webContents.send(Channel.PrimaryPlayerStatus, e.entity);
+		});
+
+		console.log(`Player: ${JSON.stringify(e.entity, null, 2)}`);
+
+		console.log(`Current HP: ${e.entity.HP}/${e.entity.maxHP}`);
 	});
 }

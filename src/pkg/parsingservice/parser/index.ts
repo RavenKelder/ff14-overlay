@@ -19,6 +19,13 @@ import {
 	CustomCombatStatus,
 	PlayerStatsID,
 	PlayerStats,
+	Entity,
+	CustomPrimaryPlayerEntityStatusID,
+	CustomPrimaryPlayerEntityStatus,
+	NetworkUpdateHPID,
+	NetworkUpdateHP,
+	AddCombatantID,
+	AddCombatant,
 } from "./events";
 import { Hook, HookManager } from "../../ui/hooks";
 import { AbilityManager } from "./ability";
@@ -123,6 +130,10 @@ export class Parser {
 				return new ChangePrimaryPlayer(line);
 			case PlayerStatsID:
 				return new PlayerStats(line);
+			case NetworkUpdateHPID:
+				return new NetworkUpdateHP(line);
+			case AddCombatantID:
+				return new AddCombatant(line);
 		}
 
 		return new ParseEvent(line);
@@ -154,18 +165,49 @@ export class Parser {
 		};
 	}
 
+	entityIsPrimaryPlayer(entity: Entity): boolean {
+		return (
+			(this.state.primaryPlayerID !== "" &&
+				entity.ID === this.state.primaryPlayerID) ||
+			(this.state.primaryPlayerID === "" &&
+				entity.name === this.state.primaryPlayer)
+		);
+	}
+
 	setupCustomEvents() {
-		const cooldownsHook: Hook<ParseEvent> = (e) => {
+		this.hooks.attach(AddCombatantID, (e) => {
+			if (!(e instanceof AddCombatant)) {
+				return;
+			}
+
+			if (this.entityIsPrimaryPlayer(e.entity)) {
+				this.hooks.run(
+					CustomPrimaryPlayerEntityStatusID,
+					new CustomPrimaryPlayerEntityStatus(e.entity),
+				);
+			}
+		});
+
+		const networkAbilityHook: Hook<ParseEvent> = (e) => {
 			if (!(e instanceof NetworkAbility)) {
 				return;
 			}
 
-			if (
-				(this.state.primaryPlayerID !== "" &&
-					e.source.ID === this.state.primaryPlayerID) ||
-				(this.state.primaryPlayerID === "" &&
-					e.source.name === this.state.primaryPlayer)
-			) {
+			console.log("INFO:", e.source.ID, e.target.ID);
+
+			if (this.entityIsPrimaryPlayer(e.source)) {
+				this.hooks.run(
+					CustomPrimaryPlayerEntityStatusID,
+					new CustomPrimaryPlayerEntityStatus(e.source),
+				);
+			} else if (this.entityIsPrimaryPlayer(e.target)) {
+				this.hooks.run(
+					CustomPrimaryPlayerEntityStatusID,
+					new CustomPrimaryPlayerEntityStatus(e.target),
+				);
+			}
+
+			if (this.entityIsPrimaryPlayer(e.source)) {
 				let ability = this.state.abilityManager.getAbilityByName(
 					e.ability,
 				);
@@ -202,7 +244,7 @@ export class Parser {
 			}
 		};
 
-		this.hooks.attach(NetworkAbilityID, cooldownsHook);
-		this.hooks.attach(NetworkAOEAbilityID, cooldownsHook);
+		this.hooks.attach(NetworkAbilityID, networkAbilityHook);
+		this.hooks.attach(NetworkAOEAbilityID, networkAbilityHook);
 	}
 }

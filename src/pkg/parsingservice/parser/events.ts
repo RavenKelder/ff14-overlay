@@ -43,6 +43,7 @@ export const LogLineID = "00",
 	CustomOnCooldownID = "C02",
 	CustomOffCooldownID = "C03",
 	CustomCombatStatusID = "C04",
+	CustomPrimaryPlayerEntityStatusID = "C05",
 	DELIMITER = "|";
 
 export class ParseEvent {
@@ -224,6 +225,16 @@ export class CustomCombatStatus extends ParseEvent {
 	}
 }
 
+export class CustomPrimaryPlayerEntityStatus extends ParseEvent {
+	entity: Entity;
+
+	constructor(entity: Entity) {
+		super("");
+		this.ID = CustomPrimaryPlayerEntityStatusID;
+		this.entity = entity;
+	}
+}
+
 export class PlayerStats extends ParseEvent {
 	jobID: string;
 
@@ -231,5 +242,51 @@ export class PlayerStats extends ParseEvent {
 		super(line);
 
 		this.jobID = this.rawValues[2];
+	}
+}
+
+export class NetworkUpdateHP extends ParseEvent {
+	entity: Entity;
+
+	constructor(line: string) {
+		super(line);
+
+		this.entity = {
+			ID: this.rawValues[2],
+			name: this.rawValues[3],
+			HP: parseInt(this.rawValues[4]),
+			maxHP: parseInt(this.rawValues[5]),
+			MP: parseInt(this.rawValues[6]),
+			maxMP: parseInt(this.rawValues[7]),
+			position: {
+				x: parseFloat(this.rawValues[10]),
+				y: parseFloat(this.rawValues[11]),
+				z: parseFloat(this.rawValues[12]),
+			},
+			heading: parseFloat(this.rawValues[13]),
+		};
+	}
+}
+
+export class AddCombatant extends ParseEvent {
+	entity: Entity;
+
+	constructor(line: string) {
+		super(line);
+
+		this.entity = {
+			ID: this.rawValues[2],
+			name: this.rawValues[3],
+			HP: parseInt(this.rawValues[11]),
+			maxHP: parseInt(this.rawValues[12]),
+			MP: parseInt(this.rawValues[13]),
+			maxMP: parseInt(this.rawValues[14]),
+			position: {
+				x: parseFloat(this.rawValues[17]),
+				y: parseFloat(this.rawValues[18]),
+				z: parseFloat(this.rawValues[19]),
+			},
+			heading: parseFloat(this.rawValues[20]),
+		};
 	}
 }

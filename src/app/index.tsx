@@ -2,6 +2,7 @@ import React, { CSSProperties, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Channel } from "./ipc";
 import Radial from "./components/radial";
+import Parameters from "./components/parameters";
 
 const container = document.getElementById("app");
 if (container) {
@@ -145,6 +146,18 @@ function App(): JSX.Element {
 	// };
 
 	/**
+	 * Precomputed CSS styles.
+	 */
+
+	const playerParametersHeight = 50;
+	const playerParamatersWidth = 150;
+
+	const playerParametersPosition: [number, number] = [
+		screenResolution[0] / 2 - playerParamatersWidth - 100,
+		screenResolution[1] / 2 + containerLength / 2 + 100,
+	];
+
+	/**
 	 * CSS styles.
 	 */
 
@@ -163,6 +176,12 @@ function App(): JSX.Element {
 				iconLength={boxSideLength}
 				segments={radialMenuSegments}
 				inCombat={inCombat}
+			/>
+			<Parameters
+				height={playerParametersHeight}
+				width={playerParamatersWidth}
+				position={playerParametersPosition}
+				channel={Channel.PrimaryPlayerStatus}
 			/>
 		</div>
 	);

@@ -12,6 +12,7 @@ import { Parser } from "../parsingservice/parser";
 import {
 	setupCooldownEvents,
 	setupCustomInCombatEvents,
+	setupCustomPrimaryPlayerEntityStatusEvents,
 	setupPlayerStatsEvents,
 } from "../parsingservice/parserevents";
 import { setupAbilityCharges } from "../parsingservice/ipc";
@@ -108,6 +109,7 @@ async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
 	setupCooldownEvents(parser, profilesConfig);
 	setupCustomInCombatEvents(parser);
 	setupPlayerStatsEvents(parser, profilesConfig);
+	setupCustomPrimaryPlayerEntityStatusEvents(parser);
 
 	await Promise.all([
 		setupMenuStateHandler({
