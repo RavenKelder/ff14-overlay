@@ -44,6 +44,8 @@ export const LogLineID = "00",
 	CustomOffCooldownID = "C03",
 	CustomCombatStatusID = "C04",
 	CustomPrimaryPlayerEntityStatusID = "C05",
+	OverlayPluginEnmityTargetDataID = "C06",
+	OverlayPluginOnlineStatusChangedID = "C07",
 	DELIMITER = "|";
 
 export class ParseEvent {
@@ -288,5 +290,108 @@ export class AddCombatant extends ParseEvent {
 			},
 			heading: parseFloat(this.rawValues[20]),
 		};
+	}
+}
+
+export class OverlayPluginEnmityTargetData extends ParseEvent {
+	target: Entity | null;
+	aggression: "passive" | "aggressive";
+	type: "player" | "npc" | "monster" | "item" = "item";
+
+	constructor(message: unknown) {
+		super("");
+		this.ID = OverlayPluginEnmityTargetDataID;
+		const m = message as {
+			Target: {
+				ID: number;
+				Name: string;
+				MaxHP: number;
+				CurrentHP: number;
+				PosX: number;
+				PosY: number;
+				PosZ: number;
+				Rotation: number;
+				Type: number;
+			};
+			Entries: {
+				isMe: boolean;
+			}[];
+		};
+
+		this.aggression = "passive";
+		if (m.Entries) {
+			for (let i = 0; i < m.Entries.length; i++) {
+				if (m.Entries[i].isMe) {
+					this.aggression = "aggressive";
+					break;
+				}
+			}
+		}
+
+		if (m.Target) {
+			this.target = {
+				ID: m.Target.ID.toString(16).toUpperCase(),
+				name: m.Target.Name,
+				HP: m.Target.CurrentHP,
+				maxHP: m.Target.MaxHP,
+				position: {
+					x: m.Target.PosX,
+					y: m.Target.PosY,
+					z: m.Target.PosZ,
+				},
+				heading: m.Target.Rotation,
+				maxMP: 0,
+				MP: 0,
+			};
+
+			switch (m.Target.Type) {
+				case 1:
+					this.type = "player";
+					break;
+				case 2:
+					this.type = "monster";
+					break;
+				case 3:
+					this.type = "npc";
+					break;
+				default:
+					this.type = "item";
+			}
+		} else {
+			this.target = null;
+		}
+	}
+}
+
+export class OverlayPluginOnlineStatusChanged extends ParseEvent {
+	target: string;
+	status: string;
+	constructor(message: unknown) {
+		super("");
+		this.ID = OverlayPluginOnlineStatusChangedID;
+		const m = message as {
+			type: string;
+			target: number;
+			status: string;
+		};
+		this.target = m.target.toString(16).toUpperCase();
+		this.status = m.status;
+	}
+}
+
+export class NetworkDeath extends ParseEvent {
+	sourceID: string;
+	sourceName: string;
+	targetID: string;
+	targetName: string;
+
+	constructor(line: string) {
+		super(line);
+		this.ID = NetworkDeathID;
+
+		this.targetID = this.rawValues[2];
+		this.targetName = this.rawValues[3];
+		this.sourceID = this.rawValues[4];
+		this.sourceName = this.rawValues[5];
 	}
 }

@@ -3,6 +3,7 @@ import { Transition } from "react-transition-group";
 import { useTimer } from "react-timer-hook";
 import { AbilityState, Channel } from "../ipc";
 import Centred from "./centered";
+import { useInterval } from "@mantine/hooks";
 
 const BORDER_WIDTH = 2;
 const BORDER_WIDTH_HOVERED = 4;
@@ -40,7 +41,10 @@ function calculateCooldownTime(ability: AbilityState): [Date, boolean] {
 			currentTime.getTime()
 		) {
 			nextCooldownTime = new Date(
-				ability.lastOnCooldowns[i].getTime() + ability.cooldown * 1000,
+				ability.lastOnCooldowns[i].getTime() +
+					ability.cooldown *
+						1000 *
+						(ability.charges - ability.currentCharges),
 			);
 			shouldUpdate = true;
 			break;
@@ -55,12 +59,9 @@ export default function Segment(props: BoxProps): JSX.Element {
 	/**
 	 * State hooks.
 	 */
-
-	const { seconds, minutes, restart } = useTimer({
-		expiryTimestamp: new Date(),
-	});
+	const timer = useTimer({ expiryTimestamp: new Date(0) });
+	const [, setNextCooldownTime] = useState(new Date(0));
 	const [cooldown, setCooldown] = useState(0);
-	const [charges, setCharges] = useState(1);
 	const [maxCharges, setMaxCharges] = useState(1);
 
 	const [baseVisibility, setBaseVisibility] = useState(false);
@@ -69,6 +70,8 @@ export default function Segment(props: BoxProps): JSX.Element {
 	if (props.forceVisible) {
 		visible = true;
 	}
+
+	const seconds = timer.seconds + timer.minutes * 60;
 
 	const borderWidth = props.hovered ? BORDER_WIDTH_HOVERED : BORDER_WIDTH;
 
@@ -108,19 +111,18 @@ export default function Segment(props: BoxProps): JSX.Element {
 				}
 				if (state === null) {
 					setCooldown(0);
-					setCharges(1);
 					setMaxCharges(1);
 					return;
 				}
 
 				const ability = state as AbilityState;
 				setCooldown(ability.cooldown);
-				setCharges(ability.currentCharges);
 				setMaxCharges(ability.charges);
 				const [nextCooldownTime, shouldUpdate] =
 					calculateCooldownTime(ability);
 				if (shouldUpdate) {
-					restart(nextCooldownTime);
+					setNextCooldownTime(nextCooldownTime);
+					timer.restart(nextCooldownTime);
 				}
 			},
 		);
@@ -134,16 +136,30 @@ export default function Segment(props: BoxProps): JSX.Element {
 					return;
 				}
 				const ability = state as AbilityState;
-				const [nextCooldownTime, shouldUpdate] =
-					calculateCooldownTime(ability);
 
 				setCooldown(ability.cooldown);
-				setCharges(ability.currentCharges);
 				setMaxCharges(ability.charges);
-
-				if (shouldUpdate) {
-					restart(nextCooldownTime);
-				}
+				setNextCooldownTime((prev) => {
+					const maxCooldown =
+						new Date().getTime() +
+						ability.cooldown * ability.charges * 1000;
+					if (prev.getTime() < new Date().getTime()) {
+						const next = new Date(
+							new Date().getTime() + ability.cooldown * 1000,
+						);
+						timer.restart(next);
+						return next;
+					} else {
+						const next = new Date(
+							Math.min(
+								prev.getTime() + ability.cooldown * 1000,
+								maxCooldown,
+							),
+						);
+						timer.restart(next);
+						return next;
+					}
+				});
 			},
 		);
 
@@ -155,28 +171,14 @@ export default function Segment(props: BoxProps): JSX.Element {
 		);
 	}, []);
 
-	// Computes ability charges, and determines if this segment needs to go on
-	// cooldown when its current one has expired. Only relevant for abilities
-	// with multiple charges.
-	useEffect(() => {
-		if (charges === maxCharges || minutes * 60 + seconds > 0) {
-			return;
-		}
-
-		setCharges((c) => {
-			const next = c + 1;
-			if (next < maxCharges) {
-				restart(new Date(new Date().getTime() + cooldown * 1000));
-			}
-			return next;
-		});
-	}, [seconds, minutes]);
-
 	/**
 	 * Precomputed CSS style properties.
 	 */
 
-	const totalSeconds = seconds + minutes * 60;
+	let totalSeconds = seconds % cooldown;
+	if (seconds > 0 && totalSeconds === 0) {
+		totalSeconds = cooldown;
+	}
 
 	const percentage = totalSeconds === 0 ? 0 : (100 * totalSeconds) / cooldown;
 
@@ -202,6 +204,8 @@ export default function Segment(props: BoxProps): JSX.Element {
 	// instantaneous. When this component is going to not be visible, the fade
 	// out time should be determined by fadeOutTime.
 	const duration = visible ? FADE_IN_TIME : fadeOutTime;
+
+	const charges = Math.floor((cooldown * maxCharges - seconds) / cooldown);
 
 	// Determine brightness by whether there are charges remaining (i.e. ability
 	// can still be used) and whether it is hovered.

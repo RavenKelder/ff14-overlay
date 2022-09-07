@@ -26,6 +26,12 @@ import {
 	NetworkUpdateHP,
 	AddCombatantID,
 	AddCombatant,
+	OverlayPluginEnmityTargetDataID,
+	OverlayPluginEnmityTargetData,
+	NetworkDeathID,
+	NetworkDeath,
+	OverlayPluginOnlineStatusChangedID,
+	OverlayPluginOnlineStatusChanged,
 } from "./events";
 import { Hook, HookManager } from "../../ui/hooks";
 import { AbilityManager } from "./ability";
@@ -35,6 +41,7 @@ interface State {
 	primaryPlayerID: string;
 	inCombat: boolean;
 	abilityManager: AbilityManager;
+	lastOnlineStatus: OverlayPluginOnlineStatusChanged | null;
 }
 
 interface Emitter {
@@ -56,6 +63,7 @@ export class Parser {
 			primaryPlayerID: "",
 			inCombat: false,
 			abilityManager: abilityManager,
+			lastOnlineStatus: null,
 		};
 		this.emitter = emitter;
 		this.setupCustomEvents();
@@ -113,6 +121,21 @@ export class Parser {
 			}
 		});
 
+		this.emitter.attachHook("EnmityTargetData", (m) => {
+			this.hooks.run(
+				OverlayPluginEnmityTargetDataID,
+				new OverlayPluginEnmityTargetData(m),
+			);
+		});
+
+		this.emitter.attachHook("OnlineStatusChanged", (m) => {
+			const event = new OverlayPluginOnlineStatusChanged(m);
+			if (this.state.primaryPlayerID === event.target) {
+				this.state.lastOnlineStatus = event;
+				this.hooks.run(OverlayPluginOnlineStatusChangedID, event);
+			}
+		});
+
 		this.emitter.start();
 	}
 
@@ -134,6 +157,8 @@ export class Parser {
 				return new NetworkUpdateHP(line);
 			case AddCombatantID:
 				return new AddCombatant(line);
+			case NetworkDeathID:
+				return new NetworkDeath(line);
 		}
 
 		return new ParseEvent(line);
@@ -165,7 +190,7 @@ export class Parser {
 		};
 	}
 
-	entityIsPrimaryPlayer(entity: Entity): boolean {
+	entityIsPrimaryPlayer(entity: Pick<Entity, "ID" | "name">): boolean {
 		return (
 			(this.state.primaryPlayerID !== "" &&
 				entity.ID === this.state.primaryPlayerID) ||
@@ -175,6 +200,19 @@ export class Parser {
 	}
 
 	setupCustomEvents() {
+		this.hooks.attach(NetworkUpdateHPID, (e) => {
+			if (!(e instanceof NetworkUpdateHP)) {
+				return;
+			}
+
+			if (this.entityIsPrimaryPlayer(e.entity)) {
+				this.hooks.run(
+					CustomPrimaryPlayerEntityStatusID,
+					new CustomPrimaryPlayerEntityStatus(e.entity),
+				);
+			}
+		});
+
 		this.hooks.attach(AddCombatantID, (e) => {
 			if (!(e instanceof AddCombatant)) {
 				return;
@@ -192,8 +230,6 @@ export class Parser {
 			if (!(e instanceof NetworkAbility)) {
 				return;
 			}
-
-			console.log("INFO:", e.source.ID, e.target.ID);
 
 			if (this.entityIsPrimaryPlayer(e.source)) {
 				this.hooks.run(

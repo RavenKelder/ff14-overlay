@@ -4,10 +4,16 @@ import { Parser } from "./parser";
 import {
 	CustomCombatStatus,
 	CustomCombatStatusID,
+	OverlayPluginEnmityTargetData,
+	OverlayPluginEnmityTargetDataID,
 	CustomOnCooldown,
 	CustomOnCooldownID,
+	OverlayPluginOnlineStatusChanged,
+	OverlayPluginOnlineStatusChangedID,
 	CustomPrimaryPlayerEntityStatus,
 	CustomPrimaryPlayerEntityStatusID,
+	NetworkDeath,
+	NetworkDeathID,
 	PlayerStats,
 	PlayerStatsID,
 } from "./parser/events";
@@ -101,11 +107,68 @@ export function setupCustomPrimaryPlayerEntityStatusEvents(parser: Parser) {
 		latest = e.timestamp;
 
 		getMenuAndRun(async (menu) => {
-			menu.webContents.send(Channel.PrimaryPlayerStatus, e.entity);
+			menu.webContents.send(
+				Channel.EmnityDataPrimaryPlayer,
+				"update",
+				e.entity,
+				null,
+				"player",
+			);
 		});
+	});
 
-		console.log(`Player: ${JSON.stringify(e.entity, null, 2)}`);
+	parser.hooks.attach(NetworkDeathID, (e) => {
+		if (!(e instanceof NetworkDeath)) {
+			return;
+		}
 
-		console.log(`Current HP: ${e.entity.HP}/${e.entity.maxHP}`);
+		if (
+			parser.entityIsPrimaryPlayer({ name: e.targetName, ID: e.targetID })
+		) {
+			if (latest.getTime() >= e.timestamp.getTime()) {
+				return;
+			}
+
+			latest = e.timestamp;
+			getMenuAndRun(async (menu) => {
+				menu.webContents.send(
+					Channel.EmnityDataPrimaryPlayer,
+					"death",
+					null,
+					null,
+					"player",
+				);
+			});
+		}
+	});
+}
+
+export function setupCustomEmnityTargetDataEvents(parser: Parser) {
+	parser.hooks.attach(OverlayPluginEnmityTargetDataID, (e) => {
+		if (!(e instanceof OverlayPluginEnmityTargetData)) {
+			return;
+		}
+
+		getMenuAndRun(async (menu) => {
+			menu.webContents.send(
+				Channel.EmnityDataTarget,
+				"update",
+				e.target,
+				e.aggression,
+				e.type,
+			);
+		});
+	});
+}
+
+export function setupCustomOnlineStatusChangedEvents(parser: Parser) {
+	parser.hooks.attach(OverlayPluginOnlineStatusChangedID, (e) => {
+		if (!(e instanceof OverlayPluginOnlineStatusChanged)) {
+			return;
+		}
+
+		getMenuAndRun(async (menu) => {
+			menu.webContents.send(Channel.OnlineStatusChanged, e.status);
+		});
 	});
 }

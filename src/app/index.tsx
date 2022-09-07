@@ -2,7 +2,7 @@ import React, { CSSProperties, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Channel } from "./ipc";
 import Radial from "./components/radial";
-import Parameters from "./components/parameters";
+import Parameters, { Entity } from "./components/parameters";
 
 const container = document.getElementById("app");
 if (container) {
@@ -11,6 +11,21 @@ if (container) {
 } else {
 	console.error("Container is unexpectedly undefined.");
 }
+
+const initialPrimaryPlayer: Entity = {
+	name: "",
+	ID: "",
+	heading: 0,
+	HP: 10000,
+	maxHP: 10000,
+	MP: 10000,
+	maxMP: 10000,
+	position: {
+		x: 0,
+		y: 0,
+		z: 0,
+	},
+};
 
 interface Options {
 	debug: boolean;
@@ -43,6 +58,11 @@ function App(): JSX.Element {
 	// Whether player is in combat. This affects how the menu is displayed.
 	const [inCombat, setInCombat] = useState(false);
 
+	// Whether the player is currently targeting something.
+	const [hasTarget, setHasTarget] = useState(false);
+
+	const [inCutscene, setInCutscene] = useState(false);
+
 	// Whether user is in edit mode. In this mode, they can modify the segments.
 	// const [editMode, setEditMode] = useState(false);
 
@@ -65,7 +85,7 @@ function App(): JSX.Element {
 		// the main process, and set the states that determine how the menu looks.
 		window.electronAPI.ipcRendererOn(
 			Channel.StartOptions,
-			(event, options) => {
+			(_event, options) => {
 				setStartTimer((prev) => {
 					if (prev !== null) {
 						clearInterval(prev);
@@ -125,6 +145,30 @@ function App(): JSX.Element {
 			setInCombat(inCombat);
 		});
 
+		// Hook for when player has a target.
+		window.electronAPI.ipcRendererOn(
+			Channel.EmnityDataTarget,
+			(_event, _updateType, entity, _aggression, targetType) => {
+				if (
+					entity === null ||
+					targetType === "npc" ||
+					targetType === "item"
+				) {
+					setHasTarget(false);
+				} else {
+					setHasTarget(true);
+				}
+			},
+		);
+
+		// Hook for player online status changes.
+		window.electronAPI.ipcRendererOn(
+			Channel.OnlineStatusChanged,
+			(_, status) => {
+				setInCutscene(status === "InCutscene");
+			},
+		);
+
 		// Once all hooks are set up, poll the main process with StartOK.
 		setStartTimer(
 			setInterval(() => {
@@ -150,11 +194,16 @@ function App(): JSX.Element {
 	 */
 
 	const playerParametersHeight = 50;
-	const playerParamatersWidth = 150;
+	const playerParamatersWidth = 200;
 
 	const playerParametersPosition: [number, number] = [
-		screenResolution[0] / 2 - playerParamatersWidth - 100,
-		screenResolution[1] / 2 + containerLength / 2 + 100,
+		screenResolution[0] / 2 - playerParamatersWidth - 150,
+		screenResolution[1] / 2 + containerLength / 2 + 50,
+	];
+
+	const targetParametersPosition: [number, number] = [
+		screenResolution[0] / 2 + 150,
+		screenResolution[1] / 2 + containerLength / 2 + 50,
 	];
 
 	/**
@@ -178,10 +227,22 @@ function App(): JSX.Element {
 				inCombat={inCombat}
 			/>
 			<Parameters
+				debug={debug}
+				visible={(inCombat || hasTarget) && !inCutscene}
 				height={playerParametersHeight}
 				width={playerParamatersWidth}
 				position={playerParametersPosition}
-				channel={Channel.PrimaryPlayerStatus}
+				channel={Channel.EmnityDataPrimaryPlayer}
+				colourTransitionDuration={300}
+				initial={initialPrimaryPlayer}
+			/>
+			<Parameters
+				debug={debug}
+				visible={(inCombat || hasTarget) && !inCutscene}
+				height={playerParametersHeight}
+				width={playerParamatersWidth}
+				position={targetParametersPosition}
+				channel={Channel.EmnityDataTarget}
 			/>
 		</div>
 	);

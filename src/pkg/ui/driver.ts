@@ -11,7 +11,9 @@ import "./system/sound";
 import { Parser } from "../parsingservice/parser";
 import {
 	setupCooldownEvents,
+	setupCustomEmnityTargetDataEvents,
 	setupCustomInCombatEvents,
+	setupCustomOnlineStatusChangedEvents,
 	setupCustomPrimaryPlayerEntityStatusEvents,
 	setupPlayerStatsEvents,
 } from "../parsingservice/parserevents";
@@ -95,9 +97,19 @@ async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
 				return profilesConfig.getProfileIcons(p.name);
 			})
 			.then((bindings) => {
-				bindings.forEach((b) => {
-					event.reply(Channel.FileReceive, b.iconBase64, b.segment);
-				});
+				setTimeout(() => {
+					const status = parser?.state.lastOnlineStatus?.status;
+					if (status) {
+						event.reply(Channel.OnlineStatusChanged, status);
+					}
+					bindings.forEach((b) => {
+						event.reply(
+							Channel.FileReceive,
+							b.iconBase64,
+							b.segment,
+						);
+					});
+				}, 1500);
 			});
 		appReady = true;
 	});
@@ -110,6 +122,8 @@ async function start(opts: StartOptions = defaultStartOptions): Promise<void> {
 	setupCustomInCombatEvents(parser);
 	setupPlayerStatsEvents(parser, profilesConfig);
 	setupCustomPrimaryPlayerEntityStatusEvents(parser);
+	setupCustomEmnityTargetDataEvents(parser);
+	setupCustomOnlineStatusChangedEvents(parser);
 
 	await Promise.all([
 		setupMenuStateHandler({

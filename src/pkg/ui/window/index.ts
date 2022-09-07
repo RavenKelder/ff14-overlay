@@ -15,13 +15,6 @@ const GET_MENU_TIMEOUT = 10000;
 const mutex = new Mutex();
 let runningCommands = 0;
 
-const debugOptionsOverride: BrowserWindowConstructorOptions = {
-	alwaysOnTop: false,
-	transparent: false,
-	focusable: true,
-	center: true,
-};
-
 let currentMenu: BrowserWindow | null = null;
 
 export interface CreateMenuOptions {
@@ -122,19 +115,17 @@ export async function restartMenu(opts = lastCreateMenuOptions): Promise<void> {
 	if (debug) {
 		baseBrowserWindowOpts = {
 			...baseBrowserWindowOpts,
-			...debugOptionsOverride,
 		};
 	}
 
 	currentMenu = new BrowserWindow(baseBrowserWindowOpts);
 	if (debug) {
-		currentMenu.webContents.openDevTools();
-	} else {
-		currentMenu.setIgnoreMouseEvents(true);
+		currentMenu.webContents.openDevTools({ mode: "detach" });
 	}
-	if (baseBrowserWindowOpts.alwaysOnTop) {
-		currentMenu.setAlwaysOnTop(true, "pop-up-menu");
-	}
+
+	currentMenu.setIgnoreMouseEvents(true);
+
+	currentMenu.setAlwaysOnTop(true, "pop-up-menu");
 
 	currentMenu.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 	stopPollActiveWindow();

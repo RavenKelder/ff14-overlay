@@ -61,6 +61,16 @@
 			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\gunbreaker\\5.png"
 		},
 		{
+			"segment": 5,
+			"command": [
+				"control",
+				"shift",
+				"9"
+			],
+			"ability": "Heart of Corundum",
+			"iconPath": "C:\\Users\\raven\\Documents\\git\\ff14-overlay\\assets\\profiles\\gunbreaker\\5.png"
+		},
+		{
 			"segment": 6,
 			"command": [
 				"control",

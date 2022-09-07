@@ -93,6 +93,10 @@
 			"cooldown": 25
 		},
 		{
+			"abilityName": "Heart of Corundum",
+			"cooldown": 25
+		},
+		{
 			"abilityName": "Reprisal",
 			"cooldown": 60
 		},
@@ -114,7 +118,8 @@
 		},
 		{
 			"abilityName": "Aurora",
-			"cooldown": 60
+			"cooldown": 60,
+			"charges": 2
 		}
 	]
 }

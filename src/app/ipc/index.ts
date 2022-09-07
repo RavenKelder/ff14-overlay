@@ -13,7 +13,9 @@ export enum Channel {
 	AbilityChargesRequest = "ability-charges-request",
 	AbilityChargesReceive = "ability-charges-receive",
 	ChangePrimaryPlayer = "change-primary-player",
-	PrimaryPlayerStatus = "primary-player-status",
+	EmnityDataTarget = "emnity-data-target",
+	EmnityDataPrimaryPlayer = "emnity-data-primary-player",
+	OnlineStatusChanged = "online-status-changed",
 }
 
 export interface Ability {
