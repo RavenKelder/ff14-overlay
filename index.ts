@@ -1,9 +1,7 @@
 import { app } from "electron";
 
-import "./pkg/ui/system/keyboard";
-import driver from "./pkg/ui/driver";
-import { setupToggleInteractive } from "./pkg/ui/window";
-import config from "./pkg/config";
+import "./src/pkg/ui/system/keyboard";
+import driver from "./src/pkg/ui/driver";
 
 const DEBUG = process.env.DEBUG ? true : false;
 
